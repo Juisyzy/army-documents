@@ -17,3 +17,8 @@
 
 /* Dropdown menus are portaled to body so panels and tables cannot clip them. */
 body > .styled-select-menu{position:fixed!important;z-index:99999!important;box-sizing:border-box}
+
+/* Реестр приказов: выпадающий список совпадает по ширине с кнопкой. */
+.styled-select.registry-faction-select{width:220px;min-width:220px;max-width:min(220px,100%);flex:0 0 220px}
+.styled-select.registry-faction-select .styled-select-trigger{width:100%;box-sizing:border-box}
+@media(max-width:600px){.styled-select.registry-faction-select{width:100%;min-width:0;max-width:100%;flex:1 1 100%}}
