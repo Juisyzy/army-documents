@@ -95,38 +95,60 @@
   host.querySelectorAll('.a4-preview-scale').forEach(n=>{n.style.height=`${Math.ceil(1123*scale)}px`;n.firstElementChild.style.transform=`scale(${scale})`;});
  }
  function refresh(){clearTimeout(scheduled);scheduled=setTimeout(build,120);}
- async function render(){clearTimeout(scheduled);await document.fonts.ready;build();
-  const blobs=[];for(const p of pages){const node=p.cloneNode(true);measureHost.appendChild(node);
+ async function render(){
+  clearTimeout(scheduled);
+  await document.fonts.ready;
+  build();
+  const blobs=[];
+  for(let i=0;i<pages.length;i++){
+   const node=pages[i].cloneNode(true);
+   measureHost.appendChild(node);
    try{
-    // Images without a src (e.g. signature not uploaded) must not be fetched by html-to-image.
-    const validImage=el=>{
-     if(!(el instanceof HTMLImageElement))return true;
-     const src=el.getAttribute('src');
-     return !!src && src.trim()!=='';
-    };
-    const images=[...node.querySelectorAll('img')].filter(validImage);
-    for(const img of images){
+    // A missing signature is normal. Remove empty image elements entirely.
+    for(const img of [...node.querySelectorAll('img')]){
+     const src=(img.getAttribute('src')||'').trim();
+     if(!src){img.remove();continue;}
      if(!img.complete){
       await new Promise((resolve,reject)=>{
-       const timeout=setTimeout(()=>reject(new Error('Таймаут загрузки изображения: '+img.getAttribute('src'))),12000);
+       const timeout=setTimeout(()=>reject(new Error('Изображение не загрузилось: '+src)),10000);
        img.addEventListener('load',()=>{clearTimeout(timeout);resolve();},{once:true});
-       img.addEventListener('error',()=>{clearTimeout(timeout);reject(new Error('Не загружается изображение: '+img.getAttribute('src')));},{once:true});
+       img.addEventListener('error',()=>{clearTimeout(timeout);reject(new Error('Изображение недоступно: '+src));},{once:true});
       });
      }
-     if(!img.naturalWidth)throw new Error('Изображение повреждено или недоступно: '+img.getAttribute('src'));
+     if(!img.naturalWidth)throw new Error('Изображение недоступно: '+src);
     }
-    const blob=await window.htmlToImage.toBlob(node,{
-     pixelRatio:2,backgroundColor:'#fff',cacheBust:false,
-     filter:validImage
-    });
-    if(!blob)throw Error('Пустая страница PNG');
+    let blob=null, primaryError=null;
+    if(window.htmlToImage){
+     try{
+      blob=await window.htmlToImage.toBlob(node,{
+       pixelRatio:2,backgroundColor:'#ffffff',cacheBust:false,
+       // Fonts are system fonts; avoiding external font discovery prevents
+       // html-to-image from treating a stylesheet fetch as an image error.
+       skipFonts:true,
+       filter:el=>!(el instanceof HTMLImageElement)||!!el.getAttribute('src')
+      });
+     }catch(e){primaryError=e;console.warn('html-to-image failed; trying canvas renderer',e);}
+    }
+    if(!blob && window.html2canvas){
+     const canvas=await window.html2canvas(node,{
+      backgroundColor:'#ffffff',scale:2,useCORS:true,allowTaint:false,
+      logging:false,width:794,height:1123,windowWidth:1200,
+      onclone:doc=>{doc.querySelectorAll('img:not([src])').forEach(el=>el.remove());}
+     });
+     blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+    }
+    if(!blob){
+     const detail=primaryError instanceof Error?primaryError.message:String(primaryError||'неизвестная ошибка');
+     throw new Error('Не удалось сформировать PNG. '+detail);
+    }
     blobs.push(blob);
    }catch(e){
-    throw new Error('Страница '+(blobs.length+1)+': '+(e?.message||e?.type||String(e)));
-   }
-   finally{node.remove();}
-  }return blobs;
+    throw new Error('Страница '+(i+1)+': '+(e?.message||String(e)));
+   }finally{node.remove();}
+  }
+  return blobs;
  }
+
  function init(){
   const original=document.getElementById('paperMobileScaler');if(!original)return;
   const host=document.createElement('div');host.id='a4Pages';original.after(host);original.style.display='none';
