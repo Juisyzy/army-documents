@@ -22,3 +22,14 @@
 .site-brand-copy h1{font-size:clamp(20px,2.6vw,30px);line-height:1.2;margin:5px 0 4px;letter-spacing:-.025em}
 .site-brand-copy .eyebrow{line-height:1.5}
 @media(max-width:560px){.site-brand{gap:11px;align-items:flex-start}.site-brand-logo{width:42px;height:42px}.site-brand-copy h1{font-size:19px}.site-brand-copy .eyebrow{font-size:10px;letter-spacing:.065em}}
+/* Multi-page A4 preview; never shrink the actual exported page. */
+#a4Pages{width:100%;min-width:0;display:flex;flex-direction:column;gap:18px;align-items:center}
+.a4-preview-item{width:100%;min-width:0}
+.a4-page-label{color:#b8c9e0;text-align:center;font:600 13px system-ui;margin:0 0 8px}
+.a4-preview-scale{width:100%;position:relative;overflow:hidden}
+.a4-preview-scale>.a4-page{transform-origin:top left;position:absolute;top:0;left:0;box-shadow:0 2px 12px #0004}
+.a4-page{width:794px!important;min-width:794px!important;max-width:794px!important;padding:115px 62px 70px!important;box-sizing:border-box!important;background:white!important}
+#paginationMeasure{position:fixed;left:-20000px;top:0;width:794px;pointer-events:none;z-index:-1}
+#paginationMeasure .a4-page{position:relative!important;transform:none!important}
+.paged-links{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0}
+.paged-links a{padding:8px 12px;border:1px solid #536b8c;border-radius:9px;color:#eac77d;text-decoration:none}

@@ -914,7 +914,7 @@ button.secondary:not(:disabled):hover{background:#344a62;border-color:#68809c}
         <p id="publishedDialogText">Приказ внесён в реестр.</p>
         <p class="published-ready" id="publishedReadyMessage" role="status">PNG готов к скачиванию</p>
         <p class="published-preview-label">Предпросмотр опубликованного PNG</p>
-        <div class="published-preview"><img id="publishedPreviewImage" alt="Предпросмотр готового приказа PNG"></div>
+        <div class="published-preview"><img id="publishedPreviewImage" alt="Предпросмотр готового приказа PNG"></div><div id="publishedPageLinks" class="paged-links"></div>
         <div class="actions publish-dialog-actions">
           <a id="publishedDownloadBtn" class="primary publish-download" href="#" download>Скачать PNG</a>
           <button type="button" class="secondary" id="publishedCloseBtn">Закрыть</button>
@@ -925,7 +925,7 @@ button.secondary:not(:disabled):hover{background:#344a62;border-color:#68809c}
     <div id="orderViewer" class="order-viewer hidden" role="dialog" aria-modal="true" aria-labelledby="orderViewerTitle">
       <div class="order-viewer-panel">
         <div class="order-viewer-head"><div><h2 id="orderViewerTitle">Просмотр приказа</h2><p id="orderViewerMeta" class="muted"></p></div><button type="button" id="orderViewerClose" class="secondary" aria-label="Закрыть">✕</button></div>
-        <div class="order-viewer-image-wrap"><img id="orderViewerImage" alt="Изображение приказа"></div>
+        <div class="order-viewer-image-wrap"><img id="orderViewerImage" alt="Изображение приказа"></div><div id="orderViewerPageLinks" class="paged-links"></div>
         <div class="order-viewer-actions"><a id="orderViewerOpen" href="#" target="_blank" rel="noopener noreferrer">Открыть оригинал</a><a id="orderViewerDownload" href="#" target="_blank" rel="noopener noreferrer">Скачать PNG</a></div>
       </div>
     </div>
@@ -1185,6 +1185,7 @@ button.secondary:not(:disabled):hover{background:#344a62;border-color:#68809c}
       }
     });
   </script>
+  <script src="pagination.js"></script>
   <script src="app.js"></script>
 <script>
 // Mobile navigation and A4 preview scaling (export still uses the unmodified #paper).
