@@ -1,7 +1,7 @@
 /* Visual enhancement: the original select remains the source of truth for forms and app.js. */
 (()=>{
   const enhanced=new WeakSet();const menus=new WeakMap();let opened=null;
-  function close(w){if(!w)return;w.classList.remove('is-open');const m=menus.get(w);if(m){m.hidden=true;m.style.visibility='hidden';}w.querySelector('.styled-select-trigger').setAttribute('aria-expanded','false');if(opened===w)opened=null;}
+  function close(w){if(!w)return;w.classList.remove('is-open');const m=menus.get(w);if(m){m.hidden=true;m.style.visibility='hidden';m.style.pointerEvents='none';}w.querySelector('.styled-select-trigger').setAttribute('aria-expanded','false');if(opened===w)opened=null;}
   function enhance(select){
     if(enhanced.has(select)||select.closest('.styled-select')||select.multiple||select.size>1)return;
     enhanced.add(select);
@@ -16,18 +16,32 @@
 
     function sync(){title.textContent=select.selectedOptions[0]?.textContent||'Выберите значение';trigger.disabled=select.disabled;for(const btn of menu.children)btn.setAttribute('aria-selected',String(btn.dataset.value===select.value));}
     function rebuild(){menu.replaceChildren();for(const option of select.options){const btn=document.createElement('button');btn.type='button';btn.className='styled-select-option';btn.setAttribute('role','option');btn.textContent=option.textContent;btn.dataset.value=option.value;btn.disabled=option.disabled;btn.addEventListener('pointerdown',e=>{e.preventDefault();});btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();select.value=option.value;close(wrapper);select.dispatchEvent(new Event('change',{bubbles:true}));sync();});menu.append(btn);}sync();}
-    trigger.addEventListener('click',()=>{if(select.disabled)return;const wasOpen=opened===wrapper;close(opened);if(!wasOpen){rebuild();menu.hidden=false;wrapper.classList.add('is-open');trigger.setAttribute('aria-expanded','true');opened=wrapper;positionMenu();}});
+    trigger.addEventListener('click',()=>{if(select.disabled)return;const wasOpen=opened===wrapper;close(opened);if(!wasOpen){rebuild();menu.hidden=false;menu.style.pointerEvents='auto';wrapper.classList.add('is-open');trigger.setAttribute('aria-expanded','true');opened=wrapper;positionMenu();}});
     trigger.addEventListener('keydown',e=>{if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(opened!==wrapper)trigger.click();const options=[...menu.querySelectorAll('button:not(:disabled)')];const current=options.findIndex(x=>x.dataset.value===select.value);options[Math.max(0,current)]?.focus();}if(e.key==='Escape')close(wrapper);});
     menu.addEventListener('keydown',e=>{if(e.key==='Escape'){close(wrapper);trigger.focus();}if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();const options=[...menu.querySelectorAll('button:not(:disabled)')];const i=options.indexOf(document.activeElement);options[(i+(e.key==='ArrowDown'?1:-1)+options.length)%options.length]?.focus();}});
-    select.addEventListener('change',sync);
+    select.addEventListener('change',()=>{sync();close(wrapper);});
     new MutationObserver(rebuild).observe(select,{childList:true,subtree:true,attributes:true,attributeFilter:['disabled','selected']});
     rebuild();
   }
-  function openedMenuContains(target){return !!(opened&&menus.get(opened)?.contains(target)) || !!document.querySelector('.styled-select-menu:not([hidden])')?.contains(target);}
   window.addEventListener('resize',()=>{if(opened)close(opened);});
   window.addEventListener('scroll',()=>{if(opened)positionOpenedMenu();},true);
-  function positionOpenedMenu(){if(!opened)return;const trigger=opened.querySelector('.styled-select-trigger');const menu=menus.get(opened);if(!trigger||!menu)return;const r=trigger.getBoundingClientRect();if(r.bottom<0||r.top>innerHeight){close(opened);return;}const below=innerHeight-r.bottom;const up=below<190&&r.top>below;menu.style.left=Math.max(8,r.left)+'px';menu.style.width=Math.min(Math.max(r.width,220),innerWidth-16)+'px';menu.style.top=up?'auto':r.bottom+6+'px';menu.style.bottom=up?(innerHeight-r.top+6)+'px':'auto';}
-  document.addEventListener('click',e=>{if(opened&&!opened.contains(e.target)&&!openedMenuContains(e.target))close(opened);});
+  function positionOpenedMenu(){if(!opened)return;const trigger=opened.querySelector('.styled-select-trigger');const menu=menus.get(opened);if(!trigger||!menu)return;const r=trigger.getBoundingClientRect();if(r.bottom<0||r.top>innerHeight){close(opened);return;}const below=innerHeight-r.bottom;const up=below<190&&r.top>below;menu.style.left=Math.max(8,r.left)+'px';menu.style.width=Math.min(Math.max(r.width,opened.classList.contains('registry-faction-select')?220:0),innerWidth-16)+'px';menu.style.top=up?'auto':r.bottom+6+'px';menu.style.bottom=up?(innerHeight-r.top+6)+'px':'auto';}
+  // Close on the earliest interaction outside the trigger/menu, even when
+  // application navigation handlers stop propagation on the subsequent click.
+  function closeOutside(e){
+    if(!opened)return;
+    const menu=menus.get(opened);
+    if(!opened.contains(e.target)&&!menu?.contains(e.target))close(opened);
+  }
+  document.addEventListener('pointerdown',closeOutside,true);
+  document.addEventListener('mousedown',closeOutside,true);
+  document.addEventListener('focusin',closeOutside,true);
+  // Hide an open menu when the source section is switched/hidden by the app.
+  document.addEventListener('click',e=>{
+    if(!opened)return;
+    const target=e.target.closest('button,a,[role="tab"],.tab');
+    if(target&&!opened.contains(target)&&!menus.get(opened)?.contains(target))close(opened);
+  },true);
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&opened){const w=opened;close(w);w.querySelector('.styled-select-trigger').focus();}});
   function scan(){document.querySelectorAll('select').forEach(enhance);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',scan);else scan();
