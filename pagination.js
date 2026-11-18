@@ -97,7 +97,33 @@
  function refresh(){clearTimeout(scheduled);scheduled=setTimeout(build,120);}
  async function render(){clearTimeout(scheduled);await document.fonts.ready;build();
   const blobs=[];for(const p of pages){const node=p.cloneNode(true);measureHost.appendChild(node);
-   try{const blob=await window.htmlToImage.toBlob(node,{pixelRatio:2,backgroundColor:'#fff',cacheBust:false});if(!blob)throw Error('Пустая страница PNG');blobs.push(blob);}
+   try{
+    // Images without a src (e.g. signature not uploaded) must not be fetched by html-to-image.
+    const validImage=el=>{
+     if(!(el instanceof HTMLImageElement))return true;
+     const src=el.getAttribute('src');
+     return !!src && src.trim()!=='';
+    };
+    const images=[...node.querySelectorAll('img')].filter(validImage);
+    for(const img of images){
+     if(!img.complete){
+      await new Promise((resolve,reject)=>{
+       const timeout=setTimeout(()=>reject(new Error('Таймаут загрузки изображения: '+img.getAttribute('src'))),12000);
+       img.addEventListener('load',()=>{clearTimeout(timeout);resolve();},{once:true});
+       img.addEventListener('error',()=>{clearTimeout(timeout);reject(new Error('Не загружается изображение: '+img.getAttribute('src')));},{once:true});
+      });
+     }
+     if(!img.naturalWidth)throw new Error('Изображение повреждено или недоступно: '+img.getAttribute('src'));
+    }
+    const blob=await window.htmlToImage.toBlob(node,{
+     pixelRatio:2,backgroundColor:'#fff',cacheBust:false,
+     filter:validImage
+    });
+    if(!blob)throw Error('Пустая страница PNG');
+    blobs.push(blob);
+   }catch(e){
+    throw new Error('Страница '+(blobs.length+1)+': '+(e?.message||e?.type||String(e)));
+   }
    finally{node.remove();}
   }return blobs;
  }
