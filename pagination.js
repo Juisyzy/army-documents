@@ -16,10 +16,24 @@
  function footerElements(page){return isGK()?[page.querySelector('.gk-sign-row')]:[...page.querySelectorAll('.signature-section,.seal-container')];}
  function bodyElement(page){return page.querySelector(isGK()?'.gk-body':'.bodytext');}
  function fit(page){
-  const root=page.getBoundingClientRect(),content=page.querySelector(isGK()?'.gk-document':'.seal-container')?.getBoundingClientRect();
-  const all=[...page.querySelectorAll('*')].filter(n=>getComputedStyle(n).display!=='none' && n.getClientRects().length);
-  let max=0;for(const n of all){const r=n.getBoundingClientRect();if(r.width&&r.height)max=Math.max(max,r.bottom-root.top);}
-  return max <= pageHeight-67;
+  // Only measure real document content. Measuring the A4 element itself
+  // always returns 1123px and incorrectly makes every page appear full.
+  const pageRect=page.getBoundingClientRect();
+  const bottomLimit=pageRect.top+1123-70; // reserve bottom A4 margin
+  let bottom=pageRect.top;
+  const active=isGK()?page.querySelector('.gk-document'):page;
+  if(!active)return true;
+  const nodes=[...active.querySelectorAll('*')];
+  for(const el of nodes){
+   const style=getComputedStyle(el);
+   if(style.display==='none'||style.visibility==='hidden'||!el.getClientRects().length)continue;
+   // Text and image leaves, plus layout elements with no element children.
+   // Do not count an A4-sized wrapper as overflowing content.
+   if(el===page||el.classList.contains('a4-page'))continue;
+   const rect=el.getBoundingClientRect();
+   if(rect.height && rect.width)bottom=Math.max(bottom,rect.bottom);
+  }
+  return bottom <= bottomLimit+0.5;
  }
  function build(){
   if(!source()||!document.body.contains(measureHost))return;
