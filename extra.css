@@ -1,0 +1,24 @@
+.site-nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.site-nav button{background:#202c3c;color:#eef3f8;border:1px solid #344255}.site-nav button.active{background:#c6a45a;color:#171717}.hidden{display:none!important}.page-section{margin-top:20px}.data-table{width:100%;border-collapse:collapse}.data-table th,.data-table td{padding:12px;text-align:left;border-bottom:1px solid #344255}.data-table td{overflow-wrap:anywhere}.data-table a{color:#e1c47d}.filter-row{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}.filter-row input,.filter-row select{flex:1;min-width:150px;background:#111a26;color:#fff;padding:10px;border:1px solid #405067;border-radius:9px}.auth-box{max-width:550px;margin:auto}.auth-box input,.auth-box select{width:100%;background:#111a26;color:#fff;padding:11px;border:1px solid #405067;border-radius:9px}.auth-box label{display:block;margin:12px 0 4px}.auth-box .actions{margin-top:15px}.site-message{color:#e1c47d;margin:10px 0;white-space:pre-wrap}.muted{color:#9eacbd}.table-wrap{overflow-x:auto}.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.toolbar select{background:#111a26;color:#fff;padding:10px;border:1px solid #405067;border-radius:9px}.page-section h2{margin:0 0 10px}.small{font-size:12px}.danger{color:#ffc0c0!important}.admin-edit{display:flex;gap:6px;flex-wrap:wrap}.admin-edit select{background:#111a26;color:#fff;padding:7px;border:1px solid #405067;border-radius:6px}button:focus-visible,a:focus-visible{outline:2px solid #e1c47d;outline-offset:2px}
+
+.auth-view h2{margin-bottom:8px}.auth-view .actions{display:flex;align-items:center;gap:10px}.auth-view .actions button{flex:1}.auth-box{max-width:480px}.auth-view label{margin-top:14px}@media(max-width:520px){.auth-view .actions{flex-direction:column}.auth-view .actions button{width:100%}}
+
+/* Просмотр опубликованного приказа */
+.order-viewer{position:fixed;inset:0;background:rgba(5,10,18,.82);z-index:5000;display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box}
+.order-viewer-panel{width:min(920px,100%);max-height:94vh;background:#162233;color:#f3f6fa;border:1px solid #405067;border-radius:16px;display:flex;flex-direction:column;box-shadow:0 20px 70px #0009;overflow:hidden}
+.order-viewer-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:18px 22px;border-bottom:1px solid #344255}.order-viewer-head h2{margin:0 0 7px}.order-viewer-head p{margin:0}
+.order-viewer-image-wrap{overflow:auto;flex:1;min-height:0;text-align:center;padding:18px;background:#303b4b}.order-viewer-image-wrap img{max-width:100%;height:auto;background:white;box-shadow:0 4px 20px #0005}
+.order-viewer-actions{display:flex;gap:18px;flex-wrap:wrap;padding:16px 22px}.order-viewer-actions a{color:#e1c47d}.viewer-open{overflow:hidden}
+/* Современные уведомления снизу по центру */
+.toast-stack{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);width:min(460px,calc(100vw - 28px));display:flex;flex-direction:column;gap:9px;z-index:9000;pointer-events:none}
+.site-toast{display:flex;align-items:flex-start;gap:12px;padding:13px 14px;border-radius:12px;color:#f5f7fa;background:#1b293a;border:1px solid #43546a;box-shadow:0 12px 35px #0008;pointer-events:auto;font:500 14px/1.45 system-ui,Arial,sans-serif;overflow-wrap:anywhere;animation:toast-in .2s ease-out}
+.site-toast.error{border-color:#9b4551}.site-toast.success{border-color:#3c8269}.toast-symbol{flex:none;width:21px;height:21px;border-radius:50%;background:#347a62;color:white;display:grid;place-items:center;font-weight:700}.site-toast.error .toast-symbol{background:#a63e4c}.toast-dismiss{margin-left:auto;flex:none;border:0!important;background:transparent!important;color:#c6cfda!important;padding:0 2px!important;font-size:23px!important;line-height:1!important;cursor:pointer}
+@keyframes toast-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:550px){.order-viewer{padding:7px}.order-viewer-head{padding:12px}.toast-stack{bottom:12px}}
+
+/* Фирменная шапка сайта */
+.site-brand{display:flex;align-items:center;gap:16px;max-width:1100px}
+.site-brand-logo{width:56px;height:56px;flex:none;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.2))}
+.site-brand-copy{min-width:0}
+.site-brand-copy h1{font-size:clamp(20px,2.6vw,30px);line-height:1.2;margin:5px 0 4px;letter-spacing:-.025em}
+.site-brand-copy .eyebrow{line-height:1.5}
+@media(max-width:560px){.site-brand{gap:11px;align-items:flex-start}.site-brand-logo{width:42px;height:42px}.site-brand-copy h1{font-size:19px}.site-brand-copy .eyebrow{font-size:10px;letter-spacing:.065em}}

@@ -1,0 +1,1228 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Электронный документооборот ВС РО</title>
+  <style>
+    :root {
+      --bg: #10151d;
+      --panel: #192230;
+      --panel2: #202c3c;
+      --line: #344255;
+      --text: #eef3f8;
+      --muted: #9eacbd;
+      --accent: #c6a45a;
+      --accent2: #e1c47d
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif
+    }
+
+    header {
+      padding: 22px clamp(16px, 4vw, 48px);
+      border-bottom: 1px solid var(--line);
+      background: #131b26
+    }
+
+    .eyebrow {
+      color: var(--accent2);
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      font-size: 11px;
+      font-weight: 700
+    }
+
+    h1 {
+      font-size: clamp(22px, 3vw, 32px);
+      margin: 5px 0 3px
+    }
+
+    header p {
+      margin: 0;
+      color: var(--muted)
+    }
+
+    main {
+      max-width: 1500px;
+      margin: auto;
+      padding: 24px clamp(12px, 3vw, 36px) 48px
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 99px;
+      padding: 7px 12px;
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .faction-switch {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap
+    }
+
+    .faction-btn {
+      background: var(--panel2);
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 99px;
+      padding: 8px 14px;
+      font: 600 13px system-ui;
+      cursor: pointer
+    }
+
+    .faction-btn.active {
+      color: #171717;
+      background: var(--accent);
+      border-color: var(--accent)
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr);
+      gap: 22px;
+      align-items: start
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden
+    }
+
+    .panel-head {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px
+    }
+
+    .panel-head h2 {
+      font-size: 16px;
+      margin: 0
+    }
+
+    .panel-body {
+      padding: 18px
+    }
+
+    .paper-wrap {
+      background: #303b49;
+      padding: clamp(12px, 2vw, 24px);
+      overflow: auto
+    }
+
+    .paper {
+      width: 100%;
+      max-width: 760px;
+      min-height: 900px;
+      margin: auto;
+      background: #ffffff;
+      color: #202020;
+      padding: 54px 62px 55px;
+      box-shadow: 0 12px 35px #0006;
+      font-family: Georgia, 'Times New Roman', serif;
+      position: relative
+    }
+
+    .paper:before {
+      content: "";
+      position: absolute;
+      inset: 15px;
+      border: 1px solid #a99d82;
+      pointer-events: none
+    }
+
+    .org {
+      text-align: center;
+      font-size: 16px;
+      font-weight: bold;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      line-height: 1.35
+    }
+
+    .org small {
+      display: block;
+      font-size: 12px;
+      letter-spacing: .04em;
+      font-weight: normal;
+      margin-top: 5px
+    }
+
+    .rule {
+      height: 1px;
+      background: #5b5549;
+      margin: 22px 0 22px
+    }
+
+    .doc-title {
+      text-align: center;
+      font-size: 23px;
+      font-weight: bold;
+      line-height: 1.3;
+      margin: 0 0 24px;
+      overflow-wrap: anywhere
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      font-size: 14px;
+      margin-bottom: 28px
+    }
+
+    .bodytext {
+      font-size: 16px;
+      line-height: 1.7;
+      text-align: justify;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      min-height: 360px
+    }
+
+    .signatures {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 25px;
+      margin-top: 55px;
+      font-size: 14px
+    }
+
+    .sig {
+      flex: 1;
+      min-width: 0
+    }
+
+    .sig-image-wrap {
+      height: 72px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      margin-bottom: 2px
+    }
+
+    .sig-image {
+      max-width: 190px;
+      max-height: 68px;
+      object-fit: contain;
+      display: none
+    }
+
+    .sig-placeholder {
+      font: italic 12px Arial;
+      color: #777;
+      margin-bottom: 12px
+    }
+
+    .sigline {
+      border-bottom: 1px solid #333;
+      height: 1px;
+      margin-bottom: 6px
+    }
+
+    .siglabel {
+      font-size: 12px;
+      text-align: center
+    }
+
+    .footer-note {
+      position: absolute;
+      bottom: 28px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: #746e61;
+      font-size: 10px;
+      letter-spacing: .04em
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .field.full {
+      grid-column: 1/-1
+    }
+
+    label {
+      font-size: 13px;
+      color: #c2ccda;
+      font-weight: 600
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid #405067;
+      border-radius: 9px;
+      background: #111a26;
+      color: var(--text);
+      padding: 11px 12px;
+      font: inherit;
+      outline: none
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px #c6a45a22
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 170px
+    }
+
+    .help {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 15px;
+      font: 600 14px system-ui;
+      cursor: pointer
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #171717
+    }
+
+    .primary:hover {
+      background: var(--accent2)
+    }
+
+    .secondary {
+      background: var(--panel2);
+      color: var(--text);
+      border: 1px solid var(--line)
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: not-allowed
+    }
+
+    .notice {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 12px
+    }
+
+    .section-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--accent2);
+      margin: 22px 0 10px
+    }
+
+    .upload-box {
+      border: 1px dashed #596a80;
+      border-radius: 11px;
+      padding: 13px;
+      background: #141e2b
+    }
+
+    .upload-box input {
+      border: 0;
+      background: transparent;
+      padding: 5px 0
+    }
+
+    .upload-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px
+    }
+
+    .signature-thumb {
+      width: 120px;
+      height: 52px;
+      background: #ffffff;
+      border: 1px solid #a99d82;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      overflow: hidden
+    }
+
+    .signature-thumb img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: none
+    }
+
+    .signature-thumb span {
+      font-size: 11px;
+      color: #777
+    }
+
+    .small-btn {
+      padding: 8px 10px;
+      font-size: 12px
+    }
+
+    @media(max-width:900px) {
+      .workspace {
+        grid-template-columns: 1fr
+      }
+
+      .paper {
+        min-height: 850px;
+        padding: 42px 34px
+      }
+
+      .paper:before {
+        inset: 10px
+      }
+    }
+
+    @media(max-width:520px) {
+      .fields {
+        grid-template-columns: 1fr
+      }
+
+      .field.full {
+        grid-column: auto
+      }
+
+      .paper {
+        padding: 35px 25px;
+        min-height: 800px
+      }
+
+      .org {
+        font-size: 13px
+      }
+
+      .doc-title {
+        font-size: 19px
+      }
+
+      .bodytext {
+        font-size: 14px
+      }
+
+      .meta {
+        font-size: 12px
+      }
+    }
+  /* Гарнизонная комендатура — отдельный бланк */
+.gk-document{font-family:"Times New Roman",serif;color:#111;font-size:20px;line-height:1.35;font-weight:400}
+.gk-top{display:grid;grid-template-columns:48% 48%;gap:4%;align-items:start}
+.gk-letterhead{text-align:center;font-size:17px;line-height:1.2}
+.gk-emblem{display:block;width:110px;height:auto;margin:0 auto 7px}
+.gk-organization{margin-top:15px;font-size:18px}
+.gk-office{margin-top:16px;font-size:16px}
+.gk-date{margin-top:12px;text-decoration:underline}
+.gk-title{margin-top:12px;font-weight:bold;white-space:pre-wrap;overflow-wrap:anywhere;text-align:center}
+.gk-address{padding-top:25px;text-align:left;white-space:pre-wrap;overflow-wrap:anywhere}
+.gk-from{margin-top:25px}
+.gk-body{margin:48px 0 0;text-align:justify;white-space:pre-wrap;min-height:95px;line-height:1.55}
+.gk-sign-row{display:grid;grid-template-columns:minmax(0,1fr) 160px minmax(0,1fr);gap:12px;align-items:center;margin-top:42px;white-space:pre-wrap}
+.gk-sign-img{min-height:80px;display:flex;align-items:center;justify-content:center;position:relative;padding-bottom:10px}.gk-sign-img:after{content:"";position:absolute;bottom:8px;left:7%;right:7%;border-bottom:1px solid #555}.gk-sign-img img{width:150px;max-height:75px;object-fit:contain;position:relative;z-index:1}
+.gk-sign-row>div:last-child{text-align:right}
+.site-nav .account-nav{margin-left:auto}
+@media(max-width:700px){.gk-document{font-size:16px}.gk-letterhead{font-size:13px}.gk-organization{font-size:14px}.gk-top{gap:3%}.gk-sign-row{grid-template-columns:1fr 90px 1fr;gap:5px}.gk-sign-img{min-height:55px}.gk-sign-img img{width:90px}}
+</style>
+<link rel="stylesheet" href="extra.css">
+<style>
+
+/* Новый бланк приказа — без герба и декоративной рамки */
+.paper{font-family:'Times New Roman',Times,serif!important;color:#111!important;max-width:794px;min-height:1123px;padding:115px 62px 70px!important;box-sizing:border-box}
+.paper:before{display:none!important}
+.doc-heading{text-align:center;font-size:23px;font-weight:700;margin:0 0 35px}
+.paper .meta{font-size:19px;margin-bottom:25px;align-items:center}
+.meta-underlined{text-decoration:underline;text-underline-offset:3px}
+.document-subtitle{text-align:center;font-size:20px;font-weight:400;margin:0 0 20px;overflow-wrap:anywhere}
+.paper .bodytext{font-size:20px;line-height:1.22;min-height:320px;white-space:pre-wrap;text-align:justify;overflow-wrap:anywhere}
+.signature-section{margin-top:42px;font-size:19px;position:relative;z-index:1}
+.signature-position{text-align:center;font-weight:700;margin-bottom:12px}
+.signature-details{display:grid;grid-template-columns:minmax(0,1fr) 175px minmax(0,1fr);gap:9px;align-items:center;text-align:center;font-size:18px}
+.signature-details strong{font-weight:700;overflow-wrap:anywhere}
+.signature-picture{height:73px;display:flex;justify-content:center;align-items:center}
+.paper .sig-image{display:none;max-width:175px;max-height:73px;object-fit:contain}
+.paper .sig-placeholder{font-size:12px;color:#888;font-style:italic}
+.approval-block{margin-top:25px}
+.seal-container{display:flex;justify-content:flex-end;margin-top:8px;min-height:130px;align-items:center;position:relative}
+#outSeal{width:135px;height:135px;object-fit:contain;display:none}
+.seal-fallback{border:4px double #34589d;color:#34589d;border-radius:50%;width:125px;height:125px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;font:700 13px Arial;transform:rotate(-12deg);box-sizing:border-box;overflow-wrap:anywhere;padding:12px}
+.seal-fallback span{font-size:11px;margin-top:8px}
+.toggle-approval{display:block;margin:10px 0 14px;color:#e4e8ee;font-weight:600}
+.toggle-approval input{width:auto;accent-color:#c6a45a}
+#approvalFields .upload-box{margin-top:12px}
+@media(max-width:520px){.paper{padding:65px 26px 45px!important;min-height:850px}.paper .bodytext{font-size:17px}.signature-details{grid-template-columns:1fr 110px 1fr;font-size:14px;gap:4px}.paper .sig-image{max-width:110px}.paper .meta{font-size:15px}}
+.account-overview{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+.account-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:20px 0}
+.account-stat{border:1px solid var(--line);border-radius:12px;background:var(--panel2);padding:20px 14px;text-align:center;display:flex;flex-direction:column;gap:5px}
+.account-stat strong{font-size:32px;color:var(--accent2);font-variant-numeric:tabular-nums}
+.account-stat span{font-size:13px;color:var(--muted)}
+.account-rename{margin-top:22px;max-width:600px}
+.account-rename-row{display:flex;gap:10px;margin-top:8px}
+.account-rename-row input{flex:1;min-width:0}
+@media(max-width:520px){.account-rename-row{flex-direction:column}.account-stats{gap:8px}.account-stat{padding:15px 8px}}
+ .registry-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:16px}
+ .registry-page-actions{display:flex;gap:8px}
+ #orderSort{min-width:190px;border:1px solid #405067;border-radius:9px;background:#111a26;color:var(--text);padding:11px 12px;font:inherit}
+
+/* Этап 4: мобильная адаптация интерфейса. Сам бланк документа не меняем. */
+.mobile-menu-toggle{display:none}
+.paper-mobile-scaler{max-width:794px;margin:0 auto;transform-origin:top left}
+@media(max-width:900px){
+  header{position:relative;padding:14px 16px}
+  .site-brand{min-width:0}
+  .site-brand-logo{width:42px;height:42px;flex-shrink:0}
+  .site-brand-copy{min-width:0}
+  header h1{font-size:clamp(17px,4.5vw,24px);line-height:1.2}
+  header .eyebrow{font-size:9px;letter-spacing:.05em}
+  .mobile-menu-toggle{display:block;width:100%;margin-top:12px;background:var(--panel2);color:var(--text);border:1px solid var(--line);text-align:left}
+  .site-nav{display:none!important;flex-direction:column!important;align-items:stretch!important;gap:7px!important;width:100%;margin-top:10px}
+  .site-nav.mobile-open{display:flex!important}
+  .site-nav button{width:100%;text-align:left;min-height:44px}
+  .site-nav button.hidden{display:none!important}
+  main{padding:14px 10px 28px}
+  .workspace{grid-template-columns:minmax(0,1fr);gap:14px}
+  .panel{min-width:0;border-radius:12px}
+  .panel-head{padding:13px;flex-wrap:wrap}
+  .panel-body{padding:13px}
+  .paper-wrap{padding:8px;overflow:hidden}
+  .paper-mobile-scaler .paper{width:794px;max-width:none;min-height:1123px;padding:115px 62px 70px!important}
+  .filter-row{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px!important}
+  .filter-row>*{width:100%!important;min-width:0!important;max-width:none!important}
+  .filter-row #orderSearch,.filter-row #orderAuthor{grid-column:span 2}
+  .filter-row #clearFilters{min-height:44px}
+  .registry-pagination{align-items:stretch}
+  .registry-page-actions{width:100%}
+  .registry-page-actions button{flex:1;min-height:44px}
+  .account-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .order-viewer-panel{width:calc(100vw - 16px);max-height:calc(100dvh - 20px);margin:10px auto}
+  .order-viewer-head{gap:10px}
+  .order-viewer-actions{flex-wrap:wrap}
+  #adminPage .data-table select{max-width:100%;width:100%;min-width:0}
+  .table-wrap{overflow:visible}
+  .data-table{display:block;width:100%;min-width:0!important}
+  .data-table thead{display:none}
+  .data-table tbody{display:grid;gap:10px}
+  .data-table tr{display:grid;gap:7px;border:1px solid var(--line);background:var(--panel2);border-radius:10px;padding:12px}
+  .data-table td{display:block!important;border:0!important;padding:0!important;min-width:0;overflow-wrap:anywhere}
+  .data-table td:not([colspan])::before{display:block;color:var(--muted);font-size:11px;font-weight:600;margin-bottom:2px}
+  #registryBody td:nth-child(1)::before{content:'Номер'}
+  #registryBody td:nth-child(2)::before{content:'Название'}
+  #registryBody td:nth-child(3)::before{content:'Дата'}
+  #registryBody td:nth-child(4)::before{content:'Автор'}
+  #registryBody td:nth-child(5)::before{content:'Документ'}
+  #draftsBody td:nth-child(1)::before{content:'Название'}
+  #draftsBody td:nth-child(2)::before{content:'Подразделение'}
+  #draftsBody td:nth-child(3)::before{content:'Изменён'}
+  #draftsBody td:nth-child(4)::before{content:'Действия'}
+  #adminBody td:nth-child(1)::before{content:'Ник'}
+  #adminBody td:nth-child(2)::before{content:'Подразделение'}
+  #adminBody td:nth-child(3)::before{content:'Роль'}
+  #adminBody td:nth-child(4)::before{content:'Действие'}
+  #historyBody td:nth-child(1)::before{content:'Время'}
+  #historyBody td:nth-child(2)::before{content:'Пользователь'}
+  #historyBody td:nth-child(3)::before{content:'Действие'}
+  #historyBody td:nth-child(4)::before{content:'Приказ'}
+  .data-table td button{min-height:40px}
+}
+@media(max-width:520px){
+  .fields{grid-template-columns:1fr}
+  .actions>button{flex:1 1 130px;min-height:44px}
+  .faction-switch{width:100%}
+  .faction-switch .pill{width:100%}
+  .faction-btn{flex:1}
+  .topbar>.pill{width:100%}
+  .account-rename-row{flex-direction:column}
+  .account-rename-row button{min-height:44px}
+  .panel-head .toolbar{width:100%;display:flex;flex-wrap:wrap;gap:8px}
+  .panel-head .toolbar select{flex:1;min-width:0}
+  .upload-row{flex-wrap:wrap}
+}
+
+/* Подтверждение публикации и выдача PNG после сохранения */
+.publish-dialog{position:fixed;inset:0;background:rgba(4,9,16,.78);z-index:1100;display:flex;align-items:center;justify-content:center;padding:18px}
+.publish-dialog.hidden{display:none!important}
+.publish-dialog-card{width:min(100%,530px);background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px;box-shadow:0 22px 75px #0009}
+.publish-dialog-card h2{font-size:21px;margin:0 0 14px;color:var(--text)}
+.publish-dialog-card p{line-height:1.65}
+.publish-dialog-actions{justify-content:flex-end}
+.publish-download{display:inline-flex;align-items:center;justify-content:center;border-radius:10px;padding:11px 15px;font:600 14px system-ui;text-decoration:none}
+body.publish-dialog-open{overflow:hidden}
+.published-preview{display:flex;justify-content:center;align-items:center;background:#101824;border:1px solid var(--line);border-radius:12px;padding:12px;margin:16px 0;max-height:310px;overflow:auto}
+.published-preview img{display:block;max-width:100%;max-height:270px;width:auto;height:auto;object-fit:contain;background:white;box-shadow:0 4px 18px #0006}
+.published-ready{color:#bfe4c8;font-weight:700;margin:12px 0 4px}
+.published-preview-label{font-size:12px;color:var(--muted);margin:0 0 4px}
+@media(max-width:520px){.publish-dialog-card{padding:20px}.publish-dialog-actions{flex-direction:column}.publish-dialog-actions button,.publish-dialog-actions a{width:100%;text-align:center}}
+
+/* Full-size A4 preview: reserve a full page column on desktop, stack on narrower screens. */
+@media(min-width:1270px){
+ .workspace{grid-template-columns:minmax(0,794px) minmax(320px,1fr)!important;gap:20px}
+ .paper-wrap{padding:12px!important}
+}
+@media(min-width:901px) and (max-width:1269px){
+ .workspace{grid-template-columns:minmax(0,1fr)!important}
+ .paper-wrap{padding:12px!important}
+}
+.paper-wrap{min-width:0;overflow:hidden}
+.paper-mobile-scaler{margin-left:auto;margin-right:auto}
+
+/* A4: 210 x 297 mm at 96 CSS pixels/inch. Fixed text metrics; preview scales as a whole. */
+:root{--a4-width:794px;--a4-height:1123px}
+.paper-mobile-scaler{width:var(--a4-width);max-width:none;margin:0 auto;transform-origin:top left}
+.paper{width:var(--a4-width)!important;min-width:var(--a4-width)!important;max-width:none!important;min-height:var(--a4-height)!important;height:auto!important;box-sizing:border-box!important;overflow:visible!important;overflow-wrap:break-word}
+.paper .bodytext,.gk-body{overflow-wrap:anywhere;word-break:normal;white-space:pre-wrap}
+.gk-document{width:100%;box-sizing:border-box}
+.gk-top{grid-template-columns:minmax(0,48%) minmax(0,48%)}
+.gk-address,.gk-letterhead,.gk-sign-row>div{min-width:0;overflow-wrap:anywhere}
+/* Do not change paper typography or padding on narrow screens; scale the entire page. */
+@media(max-width:900px){
+ .paper-mobile-scaler .paper,.paper{width:794px!important;min-width:794px!important;max-width:none!important;min-height:1123px!important;padding:115px 62px 70px!important}
+ .paper .bodytext{font-size:20px!important;line-height:1.22!important}
+ .paper .meta{font-size:19px!important}
+ .signature-details{grid-template-columns:minmax(0,1fr) 175px minmax(0,1fr)!important;font-size:18px!important;gap:9px!important}
+ .paper .sig-image{max-width:175px!important}
+ .gk-document{font-size:20px!important}
+ .gk-letterhead{font-size:17px!important}
+ .gk-organization{font-size:18px!important}
+ .gk-sign-row{grid-template-columns:minmax(0,1fr) 160px minmax(0,1fr)!important;gap:12px!important}
+ .gk-sign-img img{width:150px!important}
+}
+@media print{
+ @page{size:A4;margin:0}
+ body *{visibility:hidden!important}
+ #paper,#paper *{visibility:visible!important}
+ #paper{position:absolute!important;left:0;top:0;width:210mm!important;min-width:210mm!important;min-height:297mm!important;box-shadow:none!important;transform:none!important}
+ #paperMobileScaler{transform:none!important;width:210mm!important;height:auto!important}
+}
+
+</style>
+<style>
+
+/* Обновлённый единый стиль кнопок — без изменения логики */
+button:not(.toast-dismiss){
+  border-radius:12px;
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-weight:650;
+  letter-spacing:.005em;
+  line-height:1.25;
+  transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease,color .18s ease;
+  box-shadow:0 2px 7px rgba(0,0,0,.13);
+}
+button:not(:disabled):not(.toast-dismiss):hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,.22)}
+button:not(:disabled):not(.toast-dismiss):active{transform:translateY(0);box-shadow:0 1px 4px rgba(0,0,0,.16)}
+button:focus-visible{outline:2px solid #e6c679;outline-offset:3px}
+button:disabled{opacity:.52;box-shadow:none;transform:none}
+button.primary{background:linear-gradient(180deg,#efd48a,#c6a45a);color:#17202b;border:1px solid #dfbf71}
+button.primary:not(:disabled):hover{background:linear-gradient(180deg,#ffe2a0,#d6b366);border-color:#f0d18a}
+button.secondary{background:linear-gradient(180deg,#29394c,#202d3e);color:#f1f5f9;border:1px solid #465b73}
+button.secondary:not(:disabled):hover{background:#344a62;border-color:#68809c}
+.site-nav button:not(#logoutBtn){background:linear-gradient(180deg,#28394e,#1e2b3d);color:#edf3fa;border:1px solid #40536a;padding:10px 15px}
+.site-nav button:not(#logoutBtn):not(:disabled):hover{background:#354d67;border-color:#6883a2}
+.site-nav button.active:not(#logoutBtn){background:linear-gradient(180deg,#efd48a,#c6a45a);color:#18212d;border-color:#d7b66d;box-shadow:0 3px 12px rgba(198,164,90,.2)}
+/* Кнопка выхода выделена красным, независимо от общих стилей навигации */
+.site-nav #logoutBtn{background:linear-gradient(180deg,#d94a56,#ae2937);color:#fff;border:1px solid #e66b75;padding:10px 17px;box-shadow:0 3px 12px rgba(185,39,54,.25)}
+.site-nav #logoutBtn:not(:disabled):hover{background:linear-gradient(180deg,#eb5b66,#bf3543);border-color:#ff8c94;box-shadow:0 5px 17px rgba(185,39,54,.36)}
+.faction-btn{border-radius:12px;padding:10px 16px;background:#26374a;color:#d8e3f0;border:1px solid #445b73}
+.faction-btn:not(:disabled):hover{background:#334a62;border-color:#68809c}
+.faction-btn.active{background:linear-gradient(180deg,#efd48a,#c6a45a);border-color:#e1c47d;color:#1a2230;box-shadow:0 3px 12px rgba(198,164,90,.23)}
+/* Контрастная кнопка входа на тёмной панели */
+.site-nav #loginBtn:not(.hidden){background:linear-gradient(180deg,#f7dc91 0%,#d5ab52 100%);color:#17202b;border:1px solid #ffe5a0;padding:11px 20px;font-weight:800;box-shadow:0 4px 16px rgba(221,172,69,.32)}
+.site-nav #loginBtn:not(.hidden):not(:disabled):hover{background:linear-gradient(180deg,#ffe8ac,#e8bd60);color:#111a26;border-color:#fff0bb;box-shadow:0 6px 20px rgba(221,172,69,.45)}
+.site-nav #loginBtn:not(.hidden):focus-visible{outline:3px solid #fff1bd;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){button{transition:none!important;transform:none!important}}
+
+</style>
+  <link rel="stylesheet" href="dropdowns.css">
+</head>
+
+<body>
+  <header>
+    <div class="site-brand">
+      <img class="site-brand-logo" src="assets/edvs-logo.svg" width="56" height="56" alt="Логотип электронного документооборота ВС РО">
+      <div class="site-brand-copy">
+        <div class="eyebrow">Россия Онлайн · Тверской · Документы ВС РО</div>
+        <h1>Электронный документооборот ВС РО</h1>
+        <p>Универсальный редактор</p>
+      </div>
+    </div>
+    <button type="button" id="mobileMenuToggle" class="mobile-menu-toggle" aria-expanded="false" aria-controls="mainSiteNav" aria-label="Открыть меню">☰ Меню</button>
+    <nav class="site-nav" id="mainSiteNav" aria-label="Основное меню">
+      <button type="button" data-page="editor" id="editorNav" class="hidden">Конструктор</button>
+      <button type="button" data-page="registry">Реестр приказов</button>
+      <button type="button" data-page="drafts" id="draftsNav">Мои черновики</button>
+      <button type="button" id="loginBtn" class="account-nav">Войти / Регистрация</button>
+      <button type="button" data-page="admin" id="adminNav" class="hidden">Администрирование</button>
+      <button type="button" id="logoutBtn" class="hidden">Выйти</button>
+    </nav>
+  </header>
+  <main>
+    <div id="editorPage" class="page-section">
+    <div class="topbar">
+      <div class="faction-switch" role="group" aria-label="Выбор подразделения" style="display:none">
+        <span class="pill">Подразделение:</span>
+        <button class="faction-btn active" type="button" data-faction="army" aria-pressed="true">ВС РО</button>
+        <button class="faction-btn" type="button" data-faction="fsvng" aria-pressed="false">ФСВНГ</button>
+        <button class="faction-btn" type="button" data-faction="gk" aria-pressed="false">ГК РО</button>
+        <button class="faction-btn" type="button" data-faction="commandant" aria-pressed="false">Военный комиссариат</button>
+      </div>
+      <div class="pill">Тип документа: <strong style="color:#fff" id="documentType">Универсальный документ</strong></div>
+    </div>
+    <div class="workspace">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Предпросмотр документа</h2><span class="pill">Автоматическое обновление</span>
+        </div>
+        <div class="paper-wrap">
+          <div id="paperMobileScaler" class="paper-mobile-scaler"><article class="paper" id="paper">
+            <div id="gkDocument" class="gk-document hidden">
+              <div class="gk-top">
+                <div class="gk-letterhead">
+                  <img class="gk-emblem" src="assets/gk-emblem.png" alt="Герб Гарнизонной комендатуры">
+                  <div>МИНИСТЕРСТВО ОБОРОНЫ<br>РОССИЙСКОГО ОКРУГА</div>
+                  <div class="gk-organization">ГАРНИЗОННАЯ КОМЕНДАТУРА<br>Московской области</div>
+                  <div class="gk-office">1-й особый отдел<br>г. Москва</div>
+                  <div class="gk-date"><span id="gkOutDate"></span> № <span id="gkOutNumber"></span></div>
+                  <div class="gk-title" id="gkOutTitle"></div>
+                </div>
+                <div class="gk-address">
+                  <div id="gkOutTo"></div>
+                  <div id="gkOutFrom" class="gk-from"></div>
+                </div>
+              </div>
+              <div id="gkOutBody" class="gk-body"></div>
+              <div class="gk-sign-row">
+                <div id="gkOutSignerRole"></div>
+                <div class="gk-sign-img"><img id="gkOutSignature" alt="Подпись" /></div>
+                <div id="gkOutSignerName"></div>
+              </div>
+            </div>
+            <h2 class="doc-heading" id="outHeading">Приказ</h2>
+            <div class="meta"><span class="meta-underlined" id="outDate">18.11.2026</span><span class="meta-underlined">№ <strong id="outNumber">001</strong></span></div>
+            <h3 class="document-subtitle" id="outTitle">Название документа</h3>
+            <div class="bodytext" id="outBody">Текст документа будет отображаться здесь.</div>
+            <div class="signature-section">
+              <div class="signature-position" id="outSignerRole">Командующий Армией</div>
+              <div class="signature-details"><span id="outSignerRank">Полковник</span><span class="signature-picture"><img id="outSignature" class="sig-image" alt="Подпись"><span id="sigPlaceholder" class="sig-placeholder">Место для подписи</span></span><strong id="outSignerName">Имя Фамилия</strong></div>
+            </div>
+            <div class="signature-section approval-block hidden" id="outApprovalBlock">
+              <div class="signature-position" id="outApprovalRole">Согласовано: Заместитель начальника</div>
+              <div class="signature-details"><span id="outApprovalRank">Подполковник</span><span class="signature-picture"><img id="outApprovalSignature" class="sig-image" alt="Подпись согласующего"><span id="approvalSigPlaceholder" class="sig-placeholder">Место для подписи</span></span><strong id="outApprovalName">Имя Фамилия</strong></div>
+            </div>
+            <div class="seal-container"><img id="outSeal" alt="Печать подразделения"><div id="sealPlaceholder" class="seal-fallback">ПЕЧАТЬ<br><span id="sealFactionName">АРМИЯ</span></div></div>
+          </article></div>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Редактирование документа</h2><span class="pill">Редактирование</span>
+        </div>
+        <div class="panel-body">
+          <div class="fields">
+            <div class="field full gk-only hidden"><label for="gkTo">Кому (адресат, должность, звание, ФИО)</label><textarea id="gkTo" rows="4" placeholder="Младшему лейтенанту ..."></textarea></div>
+            <div class="field full gk-only hidden"><label for="gkFrom">От кого (должность, звание, ФИО)</label><textarea id="gkFrom" rows="4" placeholder="от Заместителя начальника ..."></textarea></div>
+            <div class="field full gk-hide-heading"><label for="docHeading">Заголовок документа (например, Приказ)</label><input id="docHeading" value="Приказ" maxlength="120"></div>
+            <div class="field"><label for="docNumber">Номер документа</label><input id="docNumber" value="001"
+                maxlength="30"></div>
+            <div class="field"><label for="docDate">Дата документа</label><input id="docDate" type="date"
+                ></div>
+            <div class="field full"><label for="docTitle">Название / о чём документ</label><input id="docTitle"
+                value="Название документа" placeholder="Например: О проведении внеплановой проверки"></div>
+            <div class="field full"><label for="docBody">Текст документа</label><textarea id="docBody"
+                placeholder="Введите полный текст документа. Переносы строк сохраняются.">Текст документа будет отображаться здесь. Введите содержание в поле справа.</textarea>
+              <div class="help">Переносы строк сохраняются в макете. Можно вставлять несколько абзацев.</div>
+            </div>
+            <div class="field"><label for="signerRole">Должность подписанта</label><input id="signerRole"
+                value="Командующий Армией"></div>
+            <div class="field gk-hide-rank"><label for="signerRank">Звание подписанта</label><input id="signerRank" value="Полковник"></div>
+            <div class="field"><label for="signerName">ФИО подписанта</label><input id="signerName" value="Имя Фамилия">
+            </div>
+          </div>
+          <div class="section-title">Изображение подписи</div>
+          <div class="upload-box">
+            <label for="signatureFile">Загрузить подпись (PNG)</label>
+            <input id="signatureFile" type="file" accept="image/png">
+            <div class="help">Требования: только PNG с прозрачным фоном; рекомендуемый размер 300 × 100 пикселей;
+              допустимый размер файла — до 3 МБ; крупные изображения автоматически уменьшаются до 1200 × 400 пикселей с сохранением пропорций.</div>
+            <div class="upload-row">
+              <div class="signature-thumb"><span id="thumbPlaceholder">Предпросмотр</span><img id="signatureThumb"
+                  alt="Предпросмотр подписи"></div>
+              <div style="flex:1">
+                <div class="help" id="signatureInfo">Подпись ещё не загружена.</div><button class="secondary small-btn"
+                  type="button" id="removeSignature" style="margin-top:7px" disabled>Удалить подпись</button>
+              </div>
+            </div>
+          </div>
+          <div class="section-title gk-irrelevant">Дополнительное согласование</div>
+          <label class="toggle-approval gk-irrelevant"><input type="checkbox" id="approvalEnabled"> Добавить блок согласования</label>
+          <div id="approvalFields" class="hidden gk-irrelevant">
+            <div class="fields">
+              <div class="field full"><label for="approvalRole">Должность согласующего</label><input id="approvalRole" value="Заместитель начальника"></div>
+              <div class="field"><label for="approvalRank">Звание согласующего</label><input id="approvalRank" value="Подполковник"></div>
+              <div class="field"><label for="approvalName">ФИО согласующего</label><input id="approvalName" value="Имя Фамилия"></div>
+            </div>
+            <div class="upload-box"><label for="approvalSignatureFile">PNG-подпись согласующего</label><input id="approvalSignatureFile" type="file" accept="image/png"><button type="button" class="secondary small-btn" id="removeApprovalSignature">Удалить подпись согласующего</button><div class="help" id="approvalSignatureInfo">Подпись не загружена</div></div>
+          </div>
+          <div class="section-title gk-irrelevant">Печать подразделения</div>
+          <div class="upload-box gk-irrelevant"><label for="sealFile">Загрузить PNG-печать для выбранного подразделения</label><input id="sealFile" type="file" accept="image/png"><div class="help" id="sealInfo">Пока для ФСВНГ используется печать ВС РО. Позже её можно заменить отдельной PNG-печатью. Можно загрузить собственную PNG-печать.</div><button type="button" class="secondary small-btn" id="removeSeal">Вернуть стандартную печать</button></div>
+          <div class="actions">
+            <button class="primary" id="nextPublishBtn" type="button">Далее</button>
+            <button class="secondary" id="resetBtn">Сбросить поля</button>
+
+            <button class="secondary" id="saveDraftBtn" disabled>Сохранить черновик</button>
+            <button class="secondary hidden" id="newDraftBtn">Новый документ</button>
+            <span class="help" id="activeDraftLabel"></span>
+          </div>
+          <div class="notice" id="publishHint"></div>
+          <div class="notice" id="status" aria-live="polite">Изменения автоматически отображаются в документе. Подпись
+            добавляется в макет после загрузки.</div>
+          <div class="section-title">О шаблоне</div>
+          <div class="help">Шаблон предназначен для создания организацинно-распорядительной документации в Вооруженных силах Российского Округа.
+          </div>
+        </div>
+      </section>
+    </div>
+    </div>
+    <section id="draftsPage" class="page-section hidden panel">
+      <div class="panel-head"><h2>Мои черновики</h2><button class="secondary" type="button" id="refreshDraftsBtn">Обновить</button></div>
+      <div class="panel-body">
+        <p class="muted">Черновики доступны только владельцу аккаунта. Номер приказа резервируется лишь при публикации.</p>
+        <div class="notice" id="draftsMessage" aria-live="polite"></div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>Название</th><th>Подразделение</th><th>Изменён</th><th>Действия</th></tr></thead><tbody id="draftsBody"><tr><td colspan="4">Загрузка…</td></tr></tbody></table></div>
+      </div>
+    </section>
+    <section id="registryPage" class="page-section hidden panel">
+      <div class="panel-head"><h2>Реестр приказов</h2><div class="toolbar"><label for="registryFaction">Подразделение</label><select id="registryFaction"><option value="army">ВС РО</option><option value="commandant">Военный комиссариат</option><option value="gk">ГК РО</option><option value="fsvng">ФСВНГ</option></select></div></div>
+      <div class="panel-body"><div class="filter-row"><input id="orderSearch" placeholder="Поиск по номеру или названию" aria-label="Поиск"><input id="orderDate" type="date" aria-label="Дата приказа"><input id="orderAuthor" placeholder="Фильтр по автору" aria-label="Автор"><select id="orderSort" aria-label="Сортировка приказов"><option value="number_desc">Номер: сначала новые</option><option value="number_asc">Номер: сначала старые</option><option value="date_desc">Дата документа: новые</option><option value="date_asc">Дата документа: старые</option><option value="created_desc">Дата публикации: новые</option><option value="created_asc">Дата публикации: старые</option></select><button class="secondary" id="clearFilters">Очистить</button></div>
+      <div class="table-wrap"><table class="data-table"><thead><tr><th>№</th><th>Название</th><th>Дата</th><th>Автор</th><th>Документ</th></tr></thead><tbody id="registryBody"></tbody></table></div><div class="registry-pagination"><span id="registryPageInfo" class="muted small" aria-live="polite">Загрузка…</span><div class="registry-page-actions"><button type="button" class="secondary small-btn" id="registryPrev" disabled>Назад</button><button type="button" class="secondary small-btn" id="registryNext" disabled>Вперёд</button></div></div></div>
+    </section>
+    <section id="accountPage" class="page-section hidden panel"><div class="panel-head"><h2>Личный кабинет</h2></div><div class="panel-body auth-box">
+      <div id="authForms">
+        <div id="loginForm" class="auth-view"><h2>Вход в систему</h2><p class="muted">Войдите, чтобы публиковать приказы и управлять личным кабинетом.</p>
+          <label for="authStaticLogin">Статический ID персонажа</label><input id="authStaticLogin" inputmode="numeric" autocomplete="username" placeholder="Например, 12345">
+          <label for="authPassword">Пароль</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="Ваш пароль">
+          <div class="actions"><button class="primary" id="signInBtn" type="button">Войти</button><button class="secondary" id="goRegisterBtn" type="button">Зарегистрироваться</button></div><button type="button" class="secondary" id="forgotPasswordBtn" style="margin-top:12px">Забыли пароль?</button><details style="margin-top:14px"><summary>Вход в старый аккаунт по электронной почте</summary><label for="legacyEmail">Почта старого аккаунта</label><input id="legacyEmail" type="email" autocomplete="email" placeholder="name@example.com"><button type="button" class="secondary" id="legacyLoginBtn">Войти в старый аккаунт</button></details>
+        </div>
+        <div id="registerForm" class="auth-view hidden"><h2>Регистрация</h2><p class="muted">Создайте аккаунт и выберите своё подразделение.</p>
+          <label for="authFirstName">Имя персонажа</label><input id="authFirstName" maxlength="60" autocomplete="given-name" placeholder="Имя">
+          <label for="authLastName">Фамилия персонажа</label><input id="authLastName" maxlength="60" autocomplete="family-name" placeholder="Фамилия">
+          <label for="authStatic">Статик персонажа</label><input id="authStatic" maxlength="30" placeholder="Например, 12345">
+          <label for="authFaction">Подразделение</label><select id="authFaction"><option value="army">ВС РО</option><option value="commandant">Военный комиссариат</option><option value="gk">Гарнизонная комендатура (ГК РО)</option><option value="fsvng">Федеральная служба войск национальной гвардии (ФСВНГ)</option></select>
+          <label for="authDepartment">Подразделение / отдел</label><input id="authDepartment" maxlength="80" placeholder="Например, РМП, КПС, ВК">
+          
+          <label for="registerPassword">Пароль (минимум 8 символов)</label><input id="registerPassword" type="password" autocomplete="new-password">
+          <label for="registerPasswordConfirm">Повторите пароль</label><input id="registerPasswordConfirm" type="password" autocomplete="new-password">
+          <div class="actions"><button class="primary" id="signUpBtn" type="button">Создать аккаунт</button><button class="secondary" id="goLoginBtn" type="button">Уже есть аккаунт? Войти</button></div>
+        </div>
+        <div id="recoveryForm" class="auth-view hidden"><h2>Восстановление пароля</h2>
+          <p class="muted">Введите статик и отправьте заявку. Администратор сгенерирует цифровой код, действующий 24 часа.</p>
+          <label for="recoveryStatic">Статический ID</label><input id="recoveryStatic" inputmode="numeric" maxlength="30" placeholder="Статик персонажа">
+          <div class="actions"><button type="button" class="primary" id="requestResetBtn">Отправить заявку</button></div>
+          <label for="recoveryCode">Временный цифровой код (8 цифр)</label><input id="recoveryCode" inputmode="numeric" maxlength="8" autocomplete="one-time-code" placeholder="00000000">
+          <label for="recoveryNewPassword">Новый пароль</label><input id="recoveryNewPassword" type="password" autocomplete="new-password" placeholder="Минимум 8 символов">
+          <label for="recoveryConfirmPassword">Повторите новый пароль</label><input id="recoveryConfirmPassword" type="password" autocomplete="new-password">
+          <div class="actions"><button type="button" class="primary" id="applyResetBtn">Установить новый пароль</button><button type="button" class="secondary" id="recoveryBackBtn">Вернуться ко входу</button></div>
+        </div>
+      </div>
+      <div id="accountInfo" class="hidden"></div><p id="authMessage" class="site-message" aria-live="polite"></p>
+    </div></section>
+    <section id="adminPage" class="page-section hidden panel"><div class="panel-head"><h2>Администрирование</h2></div><div class="panel-body"><h3>Пользователи</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Ник</th><th>Подразделение</th><th>Роль</th><th>Действие</th></tr></thead><tbody id="adminBody"></tbody></table></div><h3>Заявки на восстановление пароля</h3><p class="muted">Код показывается только при генерации. Срок действия — 24 часа.</p><div class="table-wrap"><table class="data-table"><thead><tr><th>Статик</th><th>Персонаж</th><th>Заявка</th><th>Действие</th></tr></thead><tbody id="resetRequestsBody"></tbody></table></div><div id="generatedResetCode" class="hidden" style="padding:16px;border:1px solid var(--line,#888);border-radius:12px;margin:12px 0"><strong>Временный код: <span id="generatedResetDigits" style="font-size:1.5em;letter-spacing:3px"></span></strong><p>Действует 24 часа. Передайте код пользователю лично. После закрытия этого блока код нельзя посмотреть повторно.</p><button type="button" class="secondary" id="copyResetCodeBtn">Скопировать код</button></div><h3>История публикаций и удалений</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Время</th><th>Пользователь</th><th>Действие</th><th>Приказ</th></tr></thead><tbody id="historyBody"></tbody></table></div></div></section>
+    <p id="appMessage" class="site-message hidden" role="status" aria-live="polite"></p>
+    <div id="personalDataDialog" class="publish-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="personalDataDialogTitle">
+      <div class="publish-dialog-card">
+        <h2 id="personalDataDialogTitle">Изменение личных данных</h2>
+        <p class="muted">Укажите новые данные и обязательно выберите причину.</p>
+        <label for="editFirstName">Имя</label><input id="editFirstName" maxlength="60" autocomplete="given-name">
+        <label for="editLastName">Фамилия</label><input id="editLastName" maxlength="60" autocomplete="family-name">
+        <label for="editDepartment">Подразделение</label><input id="editDepartment" maxlength="80">
+        <label for="editReason">Причина изменения</label>
+        <select id="editReason" required>
+          <option value="">Выберите причину</option>
+          <option value="dismissal">Увольнение</option>
+          <option value="name_change">Смена имени или фамилии</option>
+          <option value="transfer">Перевод</option>
+          <option value="demotion">Лишение должности</option>
+        </select>
+        <div class="actions publish-dialog-actions" style="margin-top:20px">
+          <button id="cancelPersonalDataBtn" class="secondary" type="button">Отмена</button>
+          <button id="savePersonalDataBtn" class="primary" type="button">Сохранить изменения</button>
+        </div>
+      </div>
+    </div>
+    <div id="publishDialog" class="publish-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="publishDialogTitle" aria-describedby="publishDialogText">
+      <div class="publish-dialog-card">
+        <h2 id="publishDialogTitle">Подтверждение публикации</h2>
+        <p id="publishDialogText">Документ будет внесён в реестр приказов. После публикации обычный пользователь не сможет изменить или удалить приказ. Удаление доступно только администратору.</p>
+        <p class="muted">Проверьте название, текст, подпись и подразделение. Продолжить?</p>
+        <div class="actions publish-dialog-actions">
+          <button type="button" class="secondary" id="cancelPublishBtn">Вернуться к редактированию</button>
+          <button type="button" class="primary" id="publishBtn" disabled>Занести в реестр</button>
+        </div>
+      </div>
+    </div>
+    <div id="publishedDialog" class="publish-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="publishedDialogTitle">
+      <div class="publish-dialog-card">
+        <h2 id="publishedDialogTitle">Документ опубликован</h2>
+        <p id="publishedDialogText">Приказ внесён в реестр.</p>
+        <p class="published-ready" id="publishedReadyMessage" role="status">PNG готов к скачиванию</p>
+        <p class="published-preview-label">Предпросмотр опубликованного PNG</p>
+        <div class="published-preview"><img id="publishedPreviewImage" alt="Предпросмотр готового приказа PNG"></div>
+        <div class="actions publish-dialog-actions">
+          <a id="publishedDownloadBtn" class="primary publish-download" href="#" download>Скачать PNG</a>
+          <button type="button" class="secondary" id="publishedCloseBtn">Закрыть</button>
+          <button type="button" class="secondary" id="publishedRegistryBtn">Перейти в реестр</button>
+        </div>
+      </div>
+    </div>
+    <div id="orderViewer" class="order-viewer hidden" role="dialog" aria-modal="true" aria-labelledby="orderViewerTitle">
+      <div class="order-viewer-panel">
+        <div class="order-viewer-head"><div><h2 id="orderViewerTitle">Просмотр приказа</h2><p id="orderViewerMeta" class="muted"></p></div><button type="button" id="orderViewerClose" class="secondary" aria-label="Закрыть">✕</button></div>
+        <div class="order-viewer-image-wrap"><img id="orderViewerImage" alt="Изображение приказа"></div>
+        <div class="order-viewer-actions"><a id="orderViewerOpen" href="#" target="_blank" rel="noopener noreferrer">Открыть оригинал</a><a id="orderViewerDownload" href="#" target="_blank" rel="noopener noreferrer">Скачать PNG</a></div>
+      </div>
+    </div>
+    <div id="toastStack" class="toast-stack" role="status" aria-live="polite" aria-atomic="false"></div>
+  </main>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script>
+    const $ = id => document.getElementById(id);
+    // Текущая дата в локальном часовом поясе пользователя.
+    const today = new Date();
+    const localToday = [today.getFullYear(), String(today.getMonth()+1).padStart(2,'0'), String(today.getDate()).padStart(2,'0')].join('-');
+    if (!$('docDate').value) $('docDate').value = localToday;
+    const fields = ['gkTo','gkFrom','docHeading','docNumber', 'docDate', 'docTitle', 'docBody', 'signerRole', 'signerRank', 'signerName', 'approvalRole', 'approvalRank', 'approvalName'];
+    const defaults = Object.fromEntries(fields.map(id => [id, $(id).value]));
+    let signatureData = '';
+    let approvalSignatureData = '';
+    const sealStorageKey = faction => 'army_orders_seal_' + faction;
+    const seals = {army: '', commandant: '', gk: '', fsvng: ''};
+    for (const faction of Object.keys(seals)) { try { seals[faction] = localStorage.getItem(sealStorageKey(faction)) || ''; } catch (_) {} }
+    let currentFaction = 'army';
+    Object.defineProperty(window, 'currentFaction', { get: () => currentFaction });
+    window.updateDocument = update;
+
+    const factionLayouts = {
+      army: {
+        organization: 'Вооружённые силы<br>Российского Округа',
+        signerRole: 'Командующий Армией',
+        documentType: 'Универсальный документ'
+      },
+      fsvng: {
+        organization: 'Федеральная служба войск<br>национальной гвардии',
+        signerRole: 'Руководитель ФСВНГ',
+        documentType: 'Документ ФСВНГ'
+      },
+      gk: {
+        organization: 'Гарнизонная комендатура',
+        signerRole: 'Заместитель начальника 1-го особого отдела',
+        documentType: 'Письмо Гарнизонной комендатуры'
+      },
+      commandant: {
+        organization: 'Военный комиссариат<br>РОССИЙСКОГО ОКРУГА',
+        signerRole: 'Начальник отдела кадров Военного комиссариата ВС РО',
+        documentType: 'Документ военного комиссариата'
+      }
+    };
+
+    function setFaction(faction) {
+      const layout = factionLayouts[faction];
+      if (!layout) return false;
+      if (typeof window.canUseFaction === 'function' && !window.canUseFaction(faction)) return false;
+      currentFaction = faction;
+      $('gkDocument').classList.toggle('hidden',faction!=='gk');
+      document.querySelectorAll('#paper > :not(#gkDocument)').forEach(el=>el.classList.toggle('hidden',faction==='gk'));
+      document.querySelectorAll('.gk-only').forEach(el=>el.classList.toggle('hidden',faction!=='gk'));
+      document.querySelectorAll('.gk-hide-rank').forEach(el=>el.classList.toggle('hidden',faction==='gk'));
+      document.querySelectorAll('.gk-irrelevant, .gk-hide-heading').forEach(el=>el.classList.toggle('hidden',faction==='gk'));
+      updateSeal();
+      $('signerRole').value = layout.signerRole;
+      $('documentType').textContent = layout.documentType;
+      document.querySelectorAll('.faction-btn').forEach(button => {
+        const active = button.dataset.faction === faction;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-pressed', String(active));
+      });
+      update();
+      $('status').textContent = '';
+      return true;
+    }
+
+    document.querySelectorAll('.faction-btn').forEach(button => {
+      button.addEventListener('click', () => setFaction(button.dataset.faction));
+    });
+    function formatDate(value) {
+      if (!value) return 'Дата не указана';
+      const d = new Date(value + 'T12:00:00');
+      return new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d);
+    }
+    function update() {
+      $('outHeading').textContent = $('docHeading').value.trim() || 'Приказ';
+      $('outNumber').textContent = $('docNumber').value.trim() || '—';
+      $('outDate').textContent = formatDate($('docDate').value);
+      $('outTitle').textContent = $('docTitle').value.trim() || 'Без названия';
+      $('outBody').textContent = $('docBody').value;
+      $('outSignerRole').textContent = $('signerRole').value.trim();
+      $('outSignerRank').textContent = $('signerRank').value.trim();
+      $('outApprovalRole').textContent = 'Согласовано: ' + $('approvalRole').value.trim();
+      $('outApprovalRank').textContent = $('approvalRank').value.trim();
+      $('outApprovalName').textContent = $('approvalName').value.trim();
+      $('outApprovalBlock').classList.toggle('hidden', !$('approvalEnabled').checked);
+      $('approvalFields').classList.toggle('hidden', !$('approvalEnabled').checked);
+      $('outSignerName').textContent = $('signerName').value.trim();
+      $('gkOutDate').textContent = formatDate($('docDate').value);
+      $('gkOutNumber').textContent = $('docNumber').value.trim() || '—';
+      $('gkOutTitle').textContent = $('docTitle').value.trim();
+      $('gkOutTo').textContent = $('gkTo').value;
+      $('gkOutFrom').textContent = $('gkFrom').value;
+      $('gkOutBody').textContent = $('docBody').value;
+      $('gkOutSignerRole').textContent = $('signerRole').value.trim();
+      $('gkOutSignerName').textContent = $('signerName').value.trim();
+      const gkSig=$('gkOutSignature');
+      if(signatureData){gkSig.src=signatureData;gkSig.style.display='block';}
+      else {gkSig.removeAttribute('src');gkSig.style.display='none';}
+    }
+    fields.forEach(id => $(id).addEventListener('input', update));
+    $('signatureFile').addEventListener('change', event => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      if (file.type !== 'image/png') { event.target.value = ''; $('status').textContent = 'Ошибка: загрузите изображение именно в формате PNG.'; return; }
+      if (file.size > 3 * 1024 * 1024) { event.target.value = ''; $('status').textContent = 'Ошибка: файл подписи превышает 3 МБ.'; return; }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          // Автоматически вписываем подпись в допустимые габариты, сохраняя прозрачность.
+          const scale = Math.min(1, 1200 / img.width, 400 / img.height);
+          let outputWidth = img.width, outputHeight = img.height;
+          if (scale < 1) {
+            outputWidth = Math.max(1, Math.round(img.width * scale));
+            outputHeight = Math.max(1, Math.round(img.height * scale));
+            const canvas = document.createElement('canvas');
+            canvas.width = outputWidth;
+            canvas.height = outputHeight;
+            const context = canvas.getContext('2d');
+            if (!context) {
+              $('status').textContent = 'Ошибка обработки изображения подписи.';
+              return;
+            }
+            context.imageSmoothingEnabled = true;
+            context.imageSmoothingQuality = 'high';
+            context.drawImage(img, 0, 0, outputWidth, outputHeight);
+            signatureData = canvas.toDataURL('image/png');
+          } else {
+            signatureData = reader.result;
+          }
+          $('outSignature').src = signatureData;
+          update();
+          $('outSignature').style.display = 'block';
+          $('sigPlaceholder').style.display = 'none';
+          $('signatureThumb').src = signatureData;
+          $('signatureThumb').style.display = 'block';
+          $('thumbPlaceholder').style.display = 'none';
+          $('signatureInfo').textContent = `Загружено: ${outputWidth} × ${outputHeight} px${scale < 1 ? ' · размер автоматически уменьшен' : ''}`;
+          $('removeSignature').disabled = false;
+          $('status').textContent = 'Подпись добавлена в макет. При экспорте она попадёт в PNG.';
+        };
+        img.onerror = () => { $('status').textContent = 'Не удалось прочитать изображение.'; };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+    function clearSignature() {
+      signatureData = '';
+      $('outSignature').removeAttribute('src'); $('outSignature').style.display = 'none'; $('sigPlaceholder').style.display = 'block';
+      $('signatureThumb').removeAttribute('src'); $('signatureThumb').style.display = 'none'; $('thumbPlaceholder').style.display = 'block';
+      $('signatureInfo').textContent = 'Подпись ещё не загружена.';
+      $('signatureFile').value = ''; $('removeSignature').disabled = true; update();
+    }
+    $('removeSignature').addEventListener('click', () => { clearSignature(); $('status').textContent = 'Подпись удалена из документа.'; });
+    $('approvalEnabled').addEventListener('change', update);
+    function setOptionalImage(id, placeholder, data) {
+      const img = $(id);
+      if (data) { img.src = data; img.style.display = 'block'; $(placeholder).style.display = 'none'; }
+      else { img.removeAttribute('src'); img.style.display = 'none'; $(placeholder).style.display = ''; }
+    }
+    function readPng(input, onSuccess, infoId, maxBytes = 3 * 1024 * 1024) {
+      const file = input.files?.[0]; if (!file) return;
+      if (file.type !== 'image/png' || file.size > maxBytes) { $(infoId).textContent = 'Нужен PNG размером до ' + Math.round(maxBytes/1024/1024) + ' МБ.'; input.value=''; return; }
+      const reader = new FileReader();
+      reader.onload = () => { const img = new Image(); img.onload = () => {
+        if (img.width > 1200 || img.height > 1200) { $(infoId).textContent = 'Максимальный размер изображения — 1200 × 1200 пикселей.'; input.value=''; return; }
+        onSuccess(reader.result); $(infoId).textContent = `Загружено: ${img.width} × ${img.height} пикселей.`;
+      }; img.onerror = () => { $(infoId).textContent='Не удалось прочитать PNG.'; }; img.src=reader.result; };
+      reader.readAsDataURL(file);
+    }
+    $('approvalSignatureFile').addEventListener('change', e => readPng(e.target, data => {
+      approvalSignatureData=data; setOptionalImage('outApprovalSignature','approvalSigPlaceholder',data);
+    },'approvalSignatureInfo'));
+    $('removeApprovalSignature').addEventListener('click', () => {
+      approvalSignatureData=''; setOptionalImage('outApprovalSignature','approvalSigPlaceholder','');
+      $('approvalSignatureFile').value=''; $('approvalSignatureInfo').textContent='Подпись не загружена';
+    });
+    function updateSeal() {
+      const custom = seals[currentFaction];
+      const data = custom || (currentFaction === 'fsvng' ? 'assets/fsvng-seal.png?v=1' : currentFaction === 'army' ? 'assets/army-seal.png?v=3' : 'assets/commissariat-seal.png?v=3');
+      const img=$('outSeal');
+      if (data) { img.src=data; img.style.display='block'; $('sealPlaceholder').style.display='none'; }
+      else { img.removeAttribute('src'); img.style.display='none'; $('sealPlaceholder').style.display='flex'; }
+      $('sealFactionName').textContent=({army:'ВС РО',commandant:'ВОЕННЫЙ КОМИССАРИАТ',gk:'ГК РО',fsvng:'ФСВНГ'})[currentFaction] || ''; 
+      $('sealInfo').textContent = (custom ? 'Используется ваша PNG-печать: ' : 'Установлена стандартная PNG-печать: ') + (({army:'ВС РО',commandant:'Военный комиссариат',gk:'ГК РО',fsvng:'ФСВНГ'})[currentFaction] || currentFaction) + (custom ? '. Ваша печать хранится в этом браузере.' : '. Печать включена в файлы сайта и доступна всем посетителям.');
+      $('sealFile').value='';
+    }
+    $('sealFile').addEventListener('change', e => readPng(e.target, data => {
+      try { localStorage.setItem(sealStorageKey(currentFaction),data); seals[currentFaction]=data; updateSeal(); }
+      catch(err) { $('sealInfo').textContent='Не удалось сохранить печать в браузере (недостаточно места). Выбери PNG меньшего размера.'; }
+    },'sealInfo',1024*1024));
+    $('removeSeal').addEventListener('click', () => { seals[currentFaction]=''; try {localStorage.removeItem(sealStorageKey(currentFaction));}catch(_){} updateSeal(); });
+    $('resetBtn').addEventListener('click', () => {
+      fields.forEach(id => $(id).value = defaults[id]);
+      $('signerRole').value = factionLayouts[currentFaction].signerRole;
+      clearSignature(); approvalSignatureData=''; setOptionalImage('outApprovalSignature','approvalSigPlaceholder',''); $('approvalSignatureFile').value=''; $('approvalEnabled').checked=false; update(); $('status').textContent = 'Поля и изображение подписи сброшены.';
+    });
+    window.draftEditor = {
+      snapshot() {
+        const values = Object.fromEntries(fields.map(id => [id, $(id).value]));
+        return {version:1, faction:currentFaction, values, approvalEnabled:$('approvalEnabled').checked,
+          signatureData, approvalSignatureData};
+      },
+      restore(draft) {
+        if (!draft || !draft.values || !['army','commandant','gk','fsvng'].includes(draft.faction)) throw new Error('Некорректный формат черновика');
+        if (!setFaction(draft.faction)) throw new Error('Доступ к подразделению черновика запрещён');
+        fields.forEach(id => { if (typeof draft.values[id] === 'string') $(id).value=draft.values[id]; });
+        $('approvalEnabled').checked=!!draft.approvalEnabled;
+        clearSignature();
+        if (typeof draft.signatureData==='string' && draft.signatureData.startsWith('data:image/png;base64,')) {
+          signatureData=draft.signatureData;
+          $('outSignature').src=signatureData; $('outSignature').style.display='block'; $('sigPlaceholder').style.display='none';
+          $('signatureThumb').src=signatureData; $('signatureThumb').style.display='block'; $('thumbPlaceholder').style.display='none';
+          $('signatureInfo').textContent='Подпись восстановлена из черновика'; $('removeSignature').disabled=false;
+        }
+        approvalSignatureData='';
+        if (typeof draft.approvalSignatureData==='string' && draft.approvalSignatureData.startsWith('data:image/png;base64,')) {
+          approvalSignatureData=draft.approvalSignatureData;
+        }
+        setOptionalImage('outApprovalSignature','approvalSigPlaceholder',approvalSignatureData);
+        $('approvalSignatureInfo').textContent=approvalSignatureData?'Подпись восстановлена из черновика':'Подпись не загружена';
+        update(); $('status').textContent='Черновик загружен. Можно продолжать редактирование.';
+      },
+      reset() { $('resetBtn').click(); $('docNumber').value='001'; update(); }
+    };
+    window.setFaction = setFaction;
+    updateSeal();
+    update();
+  </script>
+  <script>
+    function notify(message, kind){
+      if(!message) return;
+      const stack=document.getElementById('toastStack');
+      if(!stack)return;
+      const text=String(message);
+      const type=kind || (/ошиб|не удалось|нельзя|запрещ|не найден|укажите|войдите|не настроен|не совпада|нужна|должен|проверьте|error|denied/i.test(text)?'error':'success');
+      const item=document.createElement('div');item.className='site-toast '+type;
+      const symbol=document.createElement('span');symbol.className='toast-symbol';symbol.textContent=type==='error'?'!':'✓';
+      const label=document.createElement('span');label.textContent=text;
+      const close=document.createElement('button');close.type='button';close.className='toast-dismiss';close.textContent='×';close.setAttribute('aria-label','Закрыть уведомление');
+      const dismiss=()=>{item.remove();};close.addEventListener('click',dismiss);
+      item.append(symbol,label,close);stack.append(item);
+      while(stack.children.length>4)stack.firstElementChild.remove();
+      setTimeout(dismiss,type==='error'?8500:4800);
+    }
+    document.addEventListener('DOMContentLoaded',()=>{
+      for(const id of ['authMessage','draftsMessage']){
+        const element=document.getElementById(id);if(!element)continue;
+        let previous=element.textContent.trim();
+        new MutationObserver(()=>{const current=element.textContent.trim();if(current&&current!==previous)notify(current);previous=current;}).observe(element,{childList:true,characterData:true,subtree:true});
+      }
+    });
+  </script>
+  <script src="app.js"></script>
+<script>
+// Mobile navigation and A4 preview scaling (export still uses the unmodified #paper).
+(function initMobileUI(){
+  const menu=document.getElementById('mobileMenuToggle');
+  const nav=document.getElementById('mainSiteNav');
+  if(menu && nav){
+    menu.addEventListener('click',()=>{
+      const opened=nav.classList.toggle('mobile-open');
+      menu.setAttribute('aria-expanded',String(opened));
+      menu.textContent=opened?'✕ Закрыть меню':'☰ Меню';
+    });
+    nav.addEventListener('click',e=>{
+      if(e.target.closest('button')){
+        nav.classList.remove('mobile-open');
+        menu.setAttribute('aria-expanded','false');
+        menu.textContent='☰ Меню';
+      }
+    });
+  }
+  const wrapper=document.getElementById('paperMobileScaler');
+  const paper=document.getElementById('paper');
+  const viewport=wrapper?.parentElement;
+  if(!wrapper || !paper || !viewport)return;
+  function resizePaper(){
+    const available=Math.max(200,viewport.clientWidth-24);
+    const scale=Math.min(1,available/794);
+    wrapper.style.width=`${Math.ceil(794*scale)}px`;
+    wrapper.style.transform=scale<1?`scale(${scale})`:'';
+    wrapper.style.height=`${Math.ceil(paper.scrollHeight*scale)}px`;
+    // The paper itself always stays at A4 width for identical PNG and preview layout.
+  }
+  window.addEventListener('resize',resizePaper,{passive:true});
+  if(window.ResizeObserver){new ResizeObserver(resizePaper).observe(paper);}
+  resizePaper();
+})();
+</script>
+<script src="dropdowns.js"></script>
+</body>
+
+</html>
