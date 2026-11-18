@@ -1111,7 +1111,7 @@ button.secondary:not(:disabled):hover{background:#344a62;border-color:#68809c}
     });
     function updateSeal() {
       const custom = seals[currentFaction];
-      const data = custom || (currentFaction === 'fsvng' ? 'assets/fsvng-seal.png?v=1' : currentFaction === 'army' ? 'assets/army-seal.png?v=3' : 'assets/commissariat-seal.png?v=3');
+      const data = custom || (currentFaction === 'fsvng' ? 'assets/fsvng-seal.png?v=2' : currentFaction === 'army' ? 'assets/army-seal.png?v=3' : 'assets/commissariat-seal.png?v=3');
       const img=$('outSeal');
       if (data) { img.src=data; img.style.display='block'; $('sealPlaceholder').style.display='none'; }
       else { img.removeAttribute('src'); img.style.display='none'; $('sealPlaceholder').style.display='flex'; }
