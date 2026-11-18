@@ -741,7 +741,7 @@ button.secondary:not(:disabled):hover{background:#344a62;border-color:#68809c}
               <div id="gkOutBody" class="gk-body"></div>
               <div class="gk-sign-row">
                 <div id="gkOutSignerRole"></div>
-                <div class="gk-sign-img"><img id="gkOutSignature" alt="Подпись" /></div>
+                <div class="gk-sign-img"><img id="gkOutSignature" alt="Подпись" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" style="display:none" /></div>
                 <div id="gkOutSignerName"></div>
               </div>
             </div>
@@ -1030,7 +1030,7 @@ button.secondary:not(:disabled):hover{background:#344a62;border-color:#68809c}
       $('gkOutSignerName').textContent = $('signerName').value.trim();
       const gkSig=$('gkOutSignature');
       if(signatureData){gkSig.src=signatureData;gkSig.style.display='block';}
-      else {gkSig.removeAttribute('src');gkSig.style.display='none';}
+      else {gkSig.style.display='none';gkSig.src='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';}
     }
     fields.forEach(id => $(id).addEventListener('input', update));
     $('signatureFile').addEventListener('change', event => {

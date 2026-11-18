@@ -107,7 +107,7 @@
     // A missing signature is normal. Remove empty image elements entirely.
     for(const img of [...node.querySelectorAll('img')]){
      const src=(img.getAttribute('src')||'').trim();
-     if(!src){img.remove();continue;}
+     if(!src || getComputedStyle(img).display==='none' || img.closest('.hidden')){img.remove();continue;}
      if(!img.complete){
       await new Promise((resolve,reject)=>{
        const timeout=setTimeout(()=>reject(new Error('Изображение не загрузилось: '+src)),10000);
