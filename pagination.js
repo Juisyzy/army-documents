@@ -107,7 +107,7 @@
     // A missing signature is normal. Remove empty image elements entirely.
     for(const img of [...node.querySelectorAll('img')]){
      const src=(img.getAttribute('src')||'').trim();
-     if(!src || getComputedStyle(img).display==='none' || img.closest('.hidden')){img.remove();continue;}
+     if(!src){img.remove();continue;}
      if(!img.complete){
       await new Promise((resolve,reject)=>{
        const timeout=setTimeout(()=>reject(new Error('Изображение не загрузилось: '+src)),10000);
@@ -121,7 +121,7 @@
     if(window.htmlToImage){
      try{
       blob=await window.htmlToImage.toBlob(node,{
-       pixelRatio:2,backgroundColor:'#ffffff',cacheBust:false,
+       pixelRatio:1,backgroundColor:'#ffffff',cacheBust:false,
        // Fonts are system fonts; avoiding external font discovery prevents
        // html-to-image from treating a stylesheet fetch as an image error.
        skipFonts:true,
@@ -131,7 +131,7 @@
     }
     if(!blob && window.html2canvas){
      const canvas=await window.html2canvas(node,{
-      backgroundColor:'#ffffff',scale:2,useCORS:true,allowTaint:false,
+      backgroundColor:'#ffffff',scale:1,useCORS:true,allowTaint:false,
       logging:false,width:794,height:1123,windowWidth:1200,
       onclone:doc=>{doc.querySelectorAll('img:not([src])').forEach(el=>el.remove());}
      });

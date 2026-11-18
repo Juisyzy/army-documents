@@ -263,8 +263,25 @@ async function publish(){
     const paths=[];
     for(let i=0;i<blobs.length;i++){
       const path=i===0?created.image_path:created.image_path.replace(/\.png$/i,'')+`-page-${i+1}.png`;
-      const {error:uploadError}=await client.storage.from('order-images').upload(path,blobs[i],{contentType:'image/png',upsert:false});
-      if(uploadError) throw uploadError;
+      // Retry transient network resets; keep the same object key to avoid duplicates.
+      let uploadError=null;
+      for(let attempt=1;attempt<=3;attempt++){
+        const result=await client.storage.from('order-images').upload(path,blobs[i],{contentType:'image/png',upsert:false});
+        uploadError=result.error;
+        if(!uploadError) break;
+        // A network reset can occur after Storage accepted the upload. Verify before retrying.
+        const networkFailure=/failed to fetch|network|connection|timeout/i.test(errorText(uploadError));
+        if(!networkFailure) throw uploadError;
+        console.warn(`Storage upload attempt ${attempt}/3 failed for page ${i+1}`,uploadError);
+        const folder=path.slice(0,path.lastIndexOf('/'));
+        const filename=path.slice(path.lastIndexOf('/')+1);
+        try{
+          const {data:files,error:listError}=await client.storage.from('order-images').list(folder,{search:filename,limit:100});
+          if(!listError && files?.some(file=>file.name===filename)){uploadError=null;break;}
+        }catch(checkError){console.warn('Storage verification failed',checkError);}
+        if(attempt<3) await new Promise(resolve=>setTimeout(resolve,attempt*1500));
+      }
+      if(uploadError) throw new Error(`Не удалось загрузить страницу ${i+1} (${Math.round(blobs[i].size/1024)} КБ) после 3 попыток: ${errorText(uploadError)}`);
       if(i>0) paths.push({order_id:created.id,page_number:i+1,image_path:path});
     }
     if(paths.length){
@@ -298,11 +315,8 @@ function showPublishedDialog(order,title,blobs){
   publishedPngUrls.forEach(url=>URL.revokeObjectURL(url));
   publishedPngUrls=blobs.map(blob=>URL.createObjectURL(blob));
   $('publishedDialogText').textContent=`Приказ № ${order.number} «${title}» внесён в реестр. Страниц: ${blobs.length}.`;
-  $('publishedReadyMessage').textContent=`Готово ${blobs.length} PNG — скачайте каждую страницу отдельно`;
+  $('publishedReadyMessage').textContent='Чтобы скачать PNG, нажмите на кнопку нужной страницы ниже.';
   $('publishedPreviewImage').src=publishedPngUrls[0];
-  $('publishedDownloadBtn').href=publishedPngUrls[0];
-  $('publishedDownloadBtn').download=`prikaz-${order.number}-page-1.png`;
-  $('publishedDownloadBtn').textContent='Скачать страницу 1';
   $('publishedPageLinks').innerHTML=publishedPngUrls.map((url,i)=>`<a href="${url}" download="prikaz-${order.number}-page-${i+1}.png">Страница ${i+1}</a>`).join('');
   $('publishedDialog').classList.remove('hidden');
   document.body.classList.add('publish-dialog-open');
@@ -311,7 +325,6 @@ function closePublishedDialog(){
   $('publishedDialog').classList.add('hidden');
   document.body.classList.remove('publish-dialog-open');
   $('publishedPreviewImage').removeAttribute('src');
-  $('publishedDownloadBtn').removeAttribute('href');
   $('publishedPageLinks').replaceChildren();
   publishedPngUrls.forEach(url=>URL.revokeObjectURL(url));publishedPngUrls=[];
 }
