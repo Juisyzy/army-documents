@@ -22,3 +22,12 @@ body > .styled-select-menu{position:fixed!important;z-index:99999!important;box-
 .styled-select.registry-faction-select{width:220px;min-width:220px;max-width:min(220px,100%);flex:0 0 220px}
 .styled-select.registry-faction-select .styled-select-trigger{width:100%;box-sizing:border-box}
 @media(max-width:600px){.styled-select.registry-faction-select{width:100%;min-width:0;max-width:100%;flex:1 1 100%}}
+
+/* Фиксированная ширина переключателя подразделений, независимо от выбранного пункта. */
+.styled-select.registry-faction-select{width:220px!important;min-width:220px!important;max-width:220px!important;flex:0 0 220px!important}
+.styled-select.registry-faction-select .styled-select-current{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+@media(max-width:600px){.styled-select.registry-faction-select{width:220px!important;min-width:0!important;max-width:min(220px,100%)!important;flex:0 1 220px!important}}
+
+/* Keep dropdown choices clickable above the registry content. */
+body > .styled-select-menu:not([hidden]){pointer-events:auto!important;}
+body > .styled-select-menu .styled-select-option{pointer-events:auto!important;}
