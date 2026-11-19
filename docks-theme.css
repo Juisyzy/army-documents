@@ -6,7 +6,7 @@ header{background:#152e40!important;border-color:#355567!important}
 header p,.muted,.panel .muted{color:#afc7ce!important}
 .panel,.order-viewer-panel,.publish-dialog-card{background:#152e40!important;border-color:#456474!important;box-shadow:0 12px 35px #06182235}
 .panel-head,.order-viewer-head{background:#193649!important;border-color:#456474!important}
-.panel-body,.panel-head,.panel h2{color:#f2f8f7}
+.panel-body,.panel-head,.panel-head h2{color:#f2f8f7}
 .pill,.account-stat{background:#214255!important;border-color:#567181!important;color:#e4f2f0!important}
 .paper-wrap{background:#203a4a!important}
 button.primary,.site-nav button.active:not(#logoutBtn),.faction-btn.active,.site-nav #loginBtn:not(.hidden){background:#ceff52!important;color:#152e40!important;border:1px solid #ceff52!important;box-shadow:0 4px 14px #ceff5229!important}
@@ -46,3 +46,6 @@ button:focus-visible,a:focus-visible{outline:2px solid #ceff52!important;outline
 .paper,.gk-document{background:#fff!important;color:#111!important}
 .paper .sig-placeholder{color:#888!important}
 @media(max-width:600px){.panel{border-radius:13px}}
+
+/* Printed document typography must not inherit panel heading color. */
+#paper .doc-heading, #paper .doc-heading *, #paper .doc-body, #paper .doc-body *, #paper .meta, #paper .meta *, #paper .doc-subtitle, #paper .doc-subtitle * {color:#111!important}
