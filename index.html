@@ -850,7 +850,7 @@ button.secondary:not(:disabled):hover{background:#344a62;border-color:#68809c}
         <div id="loginForm" class="auth-view"><h2>Вход в систему</h2><p class="muted">Войдите, чтобы публиковать приказы и управлять личным кабинетом.</p>
           <label for="authStaticLogin">Статический ID персонажа</label><input id="authStaticLogin" inputmode="numeric" autocomplete="username" placeholder="Например, 12345">
           <label for="authPassword">Пароль</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="Ваш пароль">
-          <div class="actions"><button class="primary" id="signInBtn" type="button">Войти</button><button class="secondary" id="goRegisterBtn" type="button">Зарегистрироваться</button></div><button type="button" class="secondary" id="forgotPasswordBtn" style="margin-top:12px">Забыли пароль?</button><details style="margin-top:14px"><summary>Вход в старый аккаунт по электронной почте</summary><label for="legacyEmail">Почта старого аккаунта</label><input id="legacyEmail" type="email" autocomplete="email" placeholder="name@example.com"><button type="button" class="secondary" id="legacyLoginBtn">Войти в старый аккаунт</button></details>
+          <div class="actions"><button class="primary" id="signInBtn" type="button">Войти</button><button class="secondary" id="goRegisterBtn" type="button">Зарегистрироваться</button></div><button type="button" class="secondary" id="forgotPasswordBtn" style="margin-top:12px">Забыли пароль?</button><details style="margin-top:14px"><summary>Вход в старый аккаунт по электронной почте</summary><label for="legacyEmail">Почта старого аккаунта</label><input id="legacyEmail" type="email" autocomplete="email" placeholder="name@example.com"><label for="legacyPassword">Пароль старого аккаунта</label><input id="legacyPassword" type="password" autocomplete="current-password" placeholder="Пароль от старого аккаунта"><button type="button" class="secondary" id="legacyLoginBtn">Войти в старый аккаунт</button></details>
         </div>
         <div id="registerForm" class="auth-view hidden"><h2>Регистрация</h2><p class="muted">Создайте аккаунт и выберите своё подразделение.</p>
           <label for="authFirstName">Имя персонажа</label><input id="authFirstName" maxlength="60" autocomplete="given-name" placeholder="Имя">
@@ -1188,7 +1188,7 @@ button.secondary:not(:disabled):hover{background:#344a62;border-color:#68809c}
     });
   </script>
   <script src="pagination.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=author-login-fix-4"></script>
 <script>
 // Mobile navigation and A4 preview scaling (export still uses the unmodified #paper).
 (function initMobileUI(){

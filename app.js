@@ -76,7 +76,7 @@ async function login(){
   if(!validStatic(staticId) || !password) return showMsg('Введите числовой статик и пароль.','authMessage');
   const email=staticEmail(staticId);
   const {error}=await client.auth.signInWithPassword({email,password});
-  if(error) return showMsg(errorText(error),'authMessage');
+  if(error) return showMsg('Не удалось войти по статику. Проверьте числовой ID и пароль. Для старого аккаунта используйте вход по почте. ('+errorText(error)+')','authMessage');
   await refreshUser(); showMsg('Вход выполнен.'); renderAccount(); showPage('editor');
 }
 async function register(){
@@ -470,7 +470,7 @@ setActiveDraft(null);
 document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.page)));
 $('loginBtn').addEventListener('click',()=>showPage('account'));
 $('logoutBtn').addEventListener('click',async()=>{if(client)await client.auth.signOut();session=null;profile=null;updateAuthUI();showPage('account');});
-$('signInBtn').addEventListener('click',login);$('legacyLoginBtn').addEventListener('click',async()=>{const email=$('legacyEmail').value.trim(),password=$('authPassword').value;if(!email||!password)return showMsg('Введите почту старого аккаунта и пароль.');const {error}=await client.auth.signInWithPassword({email,password});if(error)return showMsg(errorText(error));await refreshUser();renderAccount();showPage('editor');});$('signUpBtn').addEventListener('click',register);
+$('signInBtn').addEventListener('click',login);$('legacyLoginBtn').addEventListener('click',async()=>{const email=$('legacyEmail').value.trim(),password=$('legacyPassword').value;if(!email||!password)return showMsg('Введите почту старого аккаунта и пароль.');const {error}=await client.auth.signInWithPassword({email,password});if(error)return showMsg(errorText(error));await refreshUser();renderAccount();showPage('editor');});$('signUpBtn').addEventListener('click',register);
 $('goRegisterBtn').addEventListener('click',()=>showAuthView('register'));
 $('goLoginBtn').addEventListener('click',()=>showAuthView('login'));
 $('forgotPasswordBtn').addEventListener('click',()=>{$('recoveryStatic').value=$('authStaticLogin').value.trim();showAuthView('recovery');});
