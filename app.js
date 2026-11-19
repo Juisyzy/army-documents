@@ -223,26 +223,21 @@ async function loadOrders(){
     return loadOrders();
   }
   orders=data||[];
-  // Resolve author IDs to character names; keep old author_name as fallback.
+  // Public registry reads the display name stored with the published order.
+  // Do not query private profiles for anonymous visitors.
   registryAuthorNames = new Map();
-  const authorIds=[...new Set(orders.map(o=>o.author_id).filter(Boolean))];
-  if(authorIds.length){
-    const {data:authors,error:authorsError}=await client.from('profiles')
-      .select('id,first_name,last_name').in('id',authorIds);
-    if(request!==registryRequest) return;
-    if(!authorsError){
-      for(const a of authors||[]){
-        const name=[a.first_name,a.last_name].filter(Boolean).join(' ').trim();
-        if(name) registryAuthorNames.set(a.id,name);
-      }
-    }
-  }
   renderOrders(); updateRegistryPagination();
+}
+function publicOrderAuthor(order){
+  const name = String(order?.author_name || '').trim();
+  // Legacy technical usernames are not public-facing author names.
+  if(!name || name === 'local' || /^user_[a-z0-9_-]+$/i.test(name)) return 'Автор не указан';
+  return name;
 }
 function renderOrders(){
   $('registryBody').innerHTML=orders.map(o=>{
     const url=client.storage.from('order-images').getPublicUrl(o.image_path).data.publicUrl;
-    return `<tr><td>${o.number}</td><td>${safe(o.title)}</td><td>${safe(o.document_date)}</td><td>${safe(registryAuthorNames.get(o.author_id) || o.author_name || 'Не указан')}</td><td><button type="button" class="secondary small-btn" data-view-order="${safe(o.id)}">Просмотр</button> · <a href="${safe(url)}" target="_blank" rel="noopener noreferrer">Открыть PNG</a> · <a href="${safe(url)}" download="prikaz-${o.number}.png" target="_blank" rel="noopener noreferrer">Скачать</a>${profile?.role==='admin'?` <button class="secondary small-btn danger" data-delete="${o.id}">Удалить</button>`:''}</td></tr>`;
+    return `<tr><td>${o.number}</td><td>${safe(o.title)}</td><td>${safe(o.document_date)}</td><td>${safe(publicOrderAuthor(o))}</td><td><button type="button" class="secondary small-btn" data-view-order="${safe(o.id)}">Просмотр</button> · <a href="${safe(url)}" target="_blank" rel="noopener noreferrer">Открыть PNG</a> · <a href="${safe(url)}" download="prikaz-${o.number}.png" target="_blank" rel="noopener noreferrer">Скачать</a>${profile?.role==='admin'?` <button class="secondary small-btn danger" data-delete="${o.id}">Удалить</button>`:''}</td></tr>`;
   }).join('') || '<tr><td colspan="5">Приказы не найдены.</td></tr>';
 }
 
@@ -261,18 +256,13 @@ async function publish(){
   let created=null;
   let stage='Подготовка PNG';
   try{
-    // #paper is deliberately hidden by pagination.js. Export the visible
-    // A4 page clones instead of passing the hidden source to html-to-image.
-    if(!window.A4Pages?.render) throw new Error('Модуль постраничного экспорта не загружен.');
+    if(!window.htmlToImage) throw new Error('Библиотека экспорта PNG не загружена.');
+    // Сначала проверяем рендеринг, чтобы не занимать номер при ошибке изображения.
     await document.fonts.ready;
-    let preparedPages;
     try {
-      preparedPages=await window.A4Pages.render();
-      if(!preparedPages.length || preparedPages.some(b=>!(b instanceof Blob) || b.size===0))
-        throw new Error('Не удалось сформировать изображение страниц');
-      if(preparedPages.length>1)
-        throw new Error('Документ содержит '+preparedPages.length+' страницы. Текущая схема публикации сохраняет только одну страницу; публикация остановлена, чтобы не потерять остальные.');
-    } catch(e) { throw new Error('Не удалось сформировать PNG до резервирования: '+(e?.message || String(e))); }
+      const preview=await window.htmlToImage.toBlob($('paper'),{pixelRatio:2,backgroundColor:'#ffffff',cacheBust:false,filter:node=>!(node instanceof HTMLImageElement && !node.getAttribute('src'))});
+      if(!preview) throw new Error('Библиотека вернула пустой PNG');
+    } catch(e) { throw new Error('Не удалось сформировать PNG до резервирования: '+(e?.message || e?.type || String(e))); }
     stage='Резервирование номера';
     const {data,error}=await client.rpc(faction==='gk'?'reserve_gk_order':faction==='fsvng'?'reserve_fsvng_order':'reserve_order',{p_faction:faction,p_title:title,p_document_date:date});
     if(error) throw error;
@@ -280,10 +270,8 @@ async function publish(){
     if(!created?.id || !created?.image_path || !Number.isInteger(created?.number)) throw new Error('Сервер вернул неполные данные резервирования приказа.');
     $('docNumber').value=String(created.number).padStart(3,'0');window.updateDocument();
     stage='Формирование PNG с номером';
-    const numberedPages=await window.A4Pages.render();
-    if(numberedPages.length!==1 || !numberedPages[0]?.size)
-      throw new Error('Не удалось сформировать единственную страницу PNG после присвоения номера.');
-    const blob=numberedPages[0];
+    const blob=await window.htmlToImage.toBlob($('paper'),{pixelRatio:2,backgroundColor:'#ffffff',cacheBust:false,filter:node=>!(node instanceof HTMLImageElement && !node.getAttribute('src'))});
+    if(!blob) throw new Error('Не удалось сформировать PNG.');
     stage='Загрузка PNG в Storage';
     const {error:uploadError}=await client.storage.from('order-images').upload(created.image_path,blob,{contentType:'image/png',upsert:false});
     if(uploadError) throw uploadError;
@@ -507,7 +495,7 @@ function viewOrder(id){
   if(!o) return showMsg('Приказ не найден. Обновите реестр.');
   const url=client.storage.from('order-images').getPublicUrl(o.image_path).data.publicUrl;
   $('orderViewerTitle').textContent=`Приказ № ${o.number} — ${o.title}`;
-  $('orderViewerMeta').textContent=`Дата: ${o.document_date} · Автор: ${registryAuthorNames.get(o.author_id) || o.author_name || 'Не указан'} · Подразделение: ${labelFaction(registryFaction)}`;
+  $('orderViewerMeta').textContent=`Дата: ${o.document_date} · Автор: ${publicOrderAuthor(o)} · Подразделение: ${labelFaction(registryFaction)}`;
   $('orderViewerImage').src=url;
   $('orderViewerImage').alt=`Приказ № ${o.number}`;
   $('orderViewerOpen').href=url;
