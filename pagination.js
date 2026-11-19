@@ -6,13 +6,18 @@
  const pageHeight=1123;
  let scheduled=0, pages=[], urls=[];
  const measureHost=document.createElement('div');measureHost.id='paginationMeasure';
- // Layout measurements and PNG rendering use real A4-sized DOM nodes.
- // Keep them outside the visible page, never below the login or registry.
- Object.assign(measureHost.style,{
-  position:'absolute',left:'-100000px',top:'0',width:'794px',
-  pointerEvents:'none',zIndex:'-1'
+ // Measurement pages must never appear beneath the registry or login.
+ // Attach to editor (which is hidden on other screens) and keep offscreen
+ // while preserving real layout metrics for A4 pagination and PNG export.
+ measureHost.style.setProperty('position','absolute','important');
+ measureHost.style.setProperty('left','-100000px','important');
+ measureHost.style.setProperty('top','0px','important');
+ measureHost.style.setProperty('width','794px','important');
+ measureHost.style.setProperty('pointer-events','none','important');
+ measureHost.style.setProperty('z-index','-1','important');
+ document.addEventListener('DOMContentLoaded',()=>{
+   (document.getElementById('editorPage')||document.body).appendChild(measureHost);
  });
- document.addEventListener('DOMContentLoaded',()=>document.body.appendChild(measureHost));
  function clonePage(){
   const node=source().cloneNode(true);node.removeAttribute('id');
   node.classList.add('a4-page');
@@ -42,7 +47,7 @@
   return bottom <= bottomLimit+0.5;
  }
  function build(){
-  if(!source()||!document.body.contains(measureHost))return;
+  if(!source()||!document.body.contains(measureHost)||document.getElementById('editorPage')?.classList.contains('hidden'))return;
   measureHost.replaceChildren();
   const original=source(); const text=(original.querySelector('#'+bodyId())?.textContent||'');
   const tokens=text.match(/\S+\s*|\s+/g)||[''];
