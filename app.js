@@ -223,21 +223,26 @@ async function loadOrders(){
     return loadOrders();
   }
   orders=data||[];
-  // Public registry reads the display name stored with the published order.
-  // Do not query private profiles for anonymous visitors.
+  // Resolve author IDs to character names; keep old author_name as fallback.
   registryAuthorNames = new Map();
+  const authorIds=[...new Set(orders.map(o=>o.author_id).filter(Boolean))];
+  if(authorIds.length){
+    const {data:authors,error:authorsError}=await client.from('profiles')
+      .select('id,first_name,last_name').in('id',authorIds);
+    if(request!==registryRequest) return;
+    if(!authorsError){
+      for(const a of authors||[]){
+        const name=[a.first_name,a.last_name].filter(Boolean).join(' ').trim();
+        if(name) registryAuthorNames.set(a.id,name);
+      }
+    }
+  }
   renderOrders(); updateRegistryPagination();
-}
-function publicOrderAuthor(order){
-  const name = String(order?.author_name || '').trim();
-  // Legacy technical usernames are not public-facing author names.
-  if(!name || name === 'local' || /^user_[a-z0-9_-]+$/i.test(name)) return 'Автор не указан';
-  return name;
 }
 function renderOrders(){
   $('registryBody').innerHTML=orders.map(o=>{
     const url=client.storage.from('order-images').getPublicUrl(o.image_path).data.publicUrl;
-    return `<tr><td>${o.number}</td><td>${safe(o.title)}</td><td>${safe(o.document_date)}</td><td>${safe(publicOrderAuthor(o))}</td><td><button type="button" class="secondary small-btn" data-view-order="${safe(o.id)}">Просмотр</button> · <a href="${safe(url)}" target="_blank" rel="noopener noreferrer">Открыть PNG</a> · <a href="${safe(url)}" download="prikaz-${o.number}.png" target="_blank" rel="noopener noreferrer">Скачать</a>${profile?.role==='admin'?` <button class="secondary small-btn danger" data-delete="${o.id}">Удалить</button>`:''}</td></tr>`;
+    return `<tr><td>${o.number}</td><td>${safe(o.title)}</td><td>${safe(o.document_date)}</td><td>${safe(registryAuthorNames.get(o.author_id) || o.author_name || 'Не указан')}</td><td><button type="button" class="secondary small-btn" data-view-order="${safe(o.id)}">Просмотр</button> · <a href="${safe(url)}" target="_blank" rel="noopener noreferrer">Открыть PNG</a> · <a href="${safe(url)}" download="prikaz-${o.number}.png" target="_blank" rel="noopener noreferrer">Скачать</a>${profile?.role==='admin'?` <button class="secondary small-btn danger" data-delete="${o.id}">Удалить</button>`:''}</td></tr>`;
   }).join('') || '<tr><td colspan="5">Приказы не найдены.</td></tr>';
 }
 
@@ -349,7 +354,7 @@ async function loadAdmin(){
     const access=new Set([u.faction,u.additional_faction,u.gk_access?'gk':null,u.fsvng_access?'fsvng':null].filter(Boolean));
     const choices=[['army','ВС РО'],['commandant','ВК'],['gk','ГК РО'],['fsvng','ФСВНГ']];
     const checks=choices.map(([key,name])=>`<label class="admin-group-option"><input type="checkbox" data-group="${key}" ${access.has(key)?'checked':''}><span>${name}</span></label>`).join('');
-    return `<tr><td><strong>${safe([u.first_name,u.last_name].filter(Boolean).join(' ') || 'Имя и фамилия не указаны')}</strong>${u.character_static?`<div style="margin-top:5px;opacity:.7;font-size:12px">Статик: ${safe(u.character_static)}</div>`:''}</td><td><details class="admin-group-picker" data-group-picker="${u.id}"><summary>Подразделения <span class="admin-group-count">${access.size} выбрано</span></summary><div class="admin-group-options">${checks}</div></details></td><td>${u.role==='admin'?'Администратор':'Пользователь'}</td><td><button class="secondary small-btn" data-save-user="${u.id}">Сохранить группы</button></td></tr>`;
+    return `<tr><td><strong>${safe([u.first_name,u.last_name].filter(Boolean).join(' ') || 'Имя и фамилия не указаны')}</strong>${u.character_static?`<div style="margin-top:5px;opacity:.7;font-size:12px">Статик: ${safe(u.character_static)}</div>`:''}</td><td><details class="admin-group-picker" data-group-picker="${u.id}"><summary>Подразделения <span class="admin-group-count">${access.size} выбрано</span></summary><div class="admin-group-options">${checks}</div></details></td><td>${u.role==='admin'?'Администратор':'Пользователь'}</td><td><span class="admin-save-status" data-save-status="${u.id}">Без изменений</span></td></tr>`;
   }).join('');
   await loadResetRequests();
   $('historyBody').innerHTML=h.error?`<tr><td colspan="4">${safe(errorText(h.error))}</td></tr>`:(h.data||[]).map(e=>`<tr><td>${safe(new Date(e.created_at).toLocaleString('ru-RU'))}</td><td>${safe(e.actor_name)}</td><td>${safe(e.action)}</td><td>${safe(labelFaction(e.faction))} №${safe(e.order_number)}</td></tr>`).join('')||'<tr><td colspan="4">Нет событий.</td></tr>';
@@ -393,21 +398,32 @@ async function generateResetCode(id){
     showMsg('Код создан. Передайте его пользователю безопасным способом.');
   }catch(e){showMsg(errorText(e));}
 }
-async function saveUser(id){
-  const current=profiles.find(u=>u.id===id);
-  const picker=document.querySelector(`[data-group-picker="${id}"]`);
-  if(!current || !picker) return showMsg('Пользователь не найден.');
-  const selected=[...picker.querySelectorAll('input[data-group]:checked')].map(el=>el.dataset.group);
-  if(!selected.length) return showMsg('Выберите хотя бы одно подразделение.');
-  // The existing database stores army/VK in faction + additional_faction,
-  // and GK/FSVNG in dedicated access flags.
-  const standard=selected.filter(x=>x==='army'||x==='commandant');
-  let faction=standard.includes(current.faction)?current.faction:(standard[0]||selected[0]);
-  const additional_faction=standard.find(x=>x!==faction)||null;
-  const gk_access=selected.includes('gk');
-  const fsvng_access=selected.includes('fsvng');
-  const {error}=await client.from('profiles').update({faction,additional_faction,gk_access,fsvng_access}).eq('id',id);
-  if(error) showMsg(errorText(error)); else {showMsg('Доступ к подразделениям обновлён.');loadAdmin();}
+function getUserGroups(u){
+  return [u.faction,u.additional_faction,u.gk_access?'gk':null,u.fsvng_access?'fsvng':null].filter(Boolean);
+}
+async function saveAllUserGroups(){
+  if(profile?.role!=='admin') return showMsg('Недостаточно прав.');
+  const button=$('saveAllGroupsBtn');
+  const changes=[];
+  for(const u of profiles){
+    const picker=document.querySelector(`[data-group-picker="${u.id}"]`);
+    if(!picker) continue;
+    const selected=[...picker.querySelectorAll('input[data-group]:checked')].map(el=>el.dataset.group);
+    const original=getUserGroups(u);
+    if(selected.length===original.length && selected.every(x=>original.includes(x))) continue;
+    if(!selected.length) return showMsg('Для '+([u.first_name,u.last_name].filter(Boolean).join(' ')||u.character_static)+' выберите хотя бы одно подразделение.');
+    changes.push({user_id:u.id,groups:selected});
+  }
+  if(!changes.length) return showMsg('Изменений нет.');
+  button.disabled=true;
+  button.textContent='Сохранение…';
+  try{
+    const {error}=await client.rpc('admin_save_user_groups_bulk',{p_changes:changes});
+    if(error) throw error;
+    showMsg('Сохранено пользователей: '+changes.length);
+    await loadAdmin();
+  }catch(e){showMsg('Не удалось сохранить группы: '+errorText(e)+'. Проверьте выполнение ADMIN_BULK_GROUPS.sql в Supabase.');}
+  finally{button.disabled=false;button.textContent='Сохранить все изменения';}
 }
 
 function setActiveDraft(id){
@@ -495,7 +511,7 @@ function viewOrder(id){
   if(!o) return showMsg('Приказ не найден. Обновите реестр.');
   const url=client.storage.from('order-images').getPublicUrl(o.image_path).data.publicUrl;
   $('orderViewerTitle').textContent=`Приказ № ${o.number} — ${o.title}`;
-  $('orderViewerMeta').textContent=`Дата: ${o.document_date} · Автор: ${publicOrderAuthor(o)} · Подразделение: ${labelFaction(registryFaction)}`;
+  $('orderViewerMeta').textContent=`Дата: ${o.document_date} · Автор: ${registryAuthorNames.get(o.author_id) || o.author_name || 'Не указан'} · Подразделение: ${labelFaction(registryFaction)}`;
   $('orderViewerImage').src=url;
   $('orderViewerImage').alt=`Приказ № ${o.number}`;
   $('orderViewerOpen').href=url;
@@ -510,9 +526,14 @@ $('orderViewerClose').addEventListener('click',closeOrderViewer);
 $('orderViewer').addEventListener('click',e=>{if(e.target===$('orderViewer'))closeOrderViewer();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('orderViewer').classList.contains('hidden'))closeOrderViewer();});
 $('orderViewerImage').addEventListener('error',()=>{if(!$('orderViewer').classList.contains('hidden'))showMsg('Не удалось загрузить PNG приказа.');});
-$('adminBody').addEventListener('click',e=>{
-  const save=e.target.closest('[data-save-user]');
-  if(save) saveUser(save.dataset.saveUser);
+$('saveAllGroupsBtn').addEventListener('click',saveAllUserGroups);
+$('adminBody').addEventListener('change',e=>{
+  if(!e.target.matches('input[data-group]'))return;
+  const picker=e.target.closest('[data-group-picker]');
+  const count=picker.querySelectorAll('input[data-group]:checked').length;
+  picker.querySelector('.admin-group-count').textContent=count+' выбрано';
+  const status=picker.closest('tr').querySelector('.admin-save-status');
+  if(status)status.textContent='Изменено';
 });
 showPage('registry');
 if(client){

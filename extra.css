@@ -33,3 +33,10 @@
 .admin-group-option{display:flex;align-items:center;gap:10px;padding:10px 9px;cursor:pointer;border-radius:7px;color:#fff}
 .admin-group-option:hover{background:#293d53}
 .admin-group-option input{accent-color:#e6bd60;width:16px;height:16px;cursor:pointer}
+
+/* Bulk administrator group controls */
+.admin-users-heading{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.admin-users-heading h3{margin:0}
+#saveAllGroupsBtn{background:#ceff52;color:#152e40;border:1px solid #ceff52;font-weight:800;border-radius:10px;padding:11px 17px;cursor:pointer}
+#saveAllGroupsBtn:disabled{opacity:.55;cursor:wait}
+.admin-save-status{font-size:12px;opacity:.8}
