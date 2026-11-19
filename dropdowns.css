@@ -65,3 +65,28 @@ body > .styled-select-menu.registration-faction-menu .styled-select-option{
   hyphens:none;
   line-height:1.35;
 }
+
+/* Registration selector: target the wrapper added by dropdowns.js, not :has(). */
+#registerForm .styled-select.registration-faction-select,
+#registerForm .registration-faction-select {
+  display:block!important;
+  width:100%!important;
+  min-width:100%!important;
+  max-width:100%!important;
+  flex:0 0 100%!important;
+  box-sizing:border-box!important;
+}
+#registerForm .registration-faction-select > .styled-select-trigger {
+  width:100%!important;
+  min-width:100%!important;
+  box-sizing:border-box!important;
+}
+body > .styled-select-menu.registration-faction-menu {
+  min-width:min(350px, calc(100vw - 16px))!important;
+  max-width:calc(100vw - 16px)!important;
+}
+body > .styled-select-menu.registration-faction-menu .styled-select-option {
+  white-space:normal!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+}
