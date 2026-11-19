@@ -417,7 +417,7 @@ function updateAdminGroupSaveState(){
   }
   const button=$('saveAllGroupsBtn');
   if(button && !button.dataset.saving){
-    button.disabled=changed===0;
+    button.disabled=false;
     button.textContent=changed?`Сохранить все изменения (${changed})`:'Сохранить все изменения';
   }
 }
@@ -435,7 +435,7 @@ async function saveAllUserGroups(){
     if(!selected.length) return showMsg('Для '+([u.first_name,u.last_name].filter(Boolean).join(' ')||u.character_static)+' выберите хотя бы одно подразделение.');
     changes.push({user_id:u.id,groups:selected});
   }
-  if(!changes.length) return showMsg('Изменений нет.');
+  if(!changes.length) return showMsg('Изменений нет. Сначала измените галочки подразделений у нужных пользователей.');
   button.dataset.saving='1';
   button.disabled=true;
   button.textContent='Сохранение…';
@@ -445,7 +445,7 @@ async function saveAllUserGroups(){
     showMsg('Сохранено пользователей: '+changes.length);
     await loadAdmin();
   }catch(e){showMsg('Не удалось сохранить группы: '+errorText(e)+'. Проверьте выполнение ADMIN_BULK_GROUPS.sql в Supabase.');}
-  finally{button.disabled=false;button.textContent='Сохранить все изменения';}
+  finally{delete button.dataset.saving;updateAdminGroupSaveState();}
 }
 
 function setActiveDraft(id){
