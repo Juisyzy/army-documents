@@ -40,3 +40,5 @@
 #saveAllGroupsBtn{background:#ceff52;color:#152e40;border:1px solid #ceff52;font-weight:800;border-radius:10px;padding:11px 17px;cursor:pointer}
 #saveAllGroupsBtn:disabled{opacity:.55;cursor:wait}
 .admin-save-status{font-size:12px;opacity:.8}
+
+.admin-save-status.unsaved{color:#ceff52;font-weight:700;opacity:1}

@@ -401,6 +401,27 @@ async function generateResetCode(id){
 function getUserGroups(u){
   return [u.faction,u.additional_faction,u.gk_access?'gk':null,u.fsvng_access?'fsvng':null].filter(Boolean);
 }
+function updateAdminGroupSaveState(){
+  let changed=0;
+  for(const u of profiles){
+    const picker=document.querySelector(`[data-group-picker="${u.id}"]`);
+    if(!picker) continue;
+    const selected=[...picker.querySelectorAll('input[data-group]:checked')].map(el=>el.dataset.group);
+    const original=getUserGroups(u);
+    const dirty=selected.length!==original.length || selected.some(x=>!original.includes(x));
+    if(dirty) changed++;
+    const count=picker.querySelector('.admin-group-count');
+    if(count) count.textContent=selected.length+' выбрано';
+    const status=picker.closest('tr').querySelector('.admin-save-status');
+    if(status) {status.textContent=dirty?'Не сохранено':'Без изменений';status.classList.toggle('unsaved',dirty);}
+  }
+  const button=$('saveAllGroupsBtn');
+  if(button && !button.dataset.saving){
+    button.disabled=changed===0;
+    button.textContent=changed?`Сохранить все изменения (${changed})`:'Сохранить все изменения';
+  }
+}
+
 async function saveAllUserGroups(){
   if(profile?.role!=='admin') return showMsg('Недостаточно прав.');
   const button=$('saveAllGroupsBtn');
@@ -415,6 +436,7 @@ async function saveAllUserGroups(){
     changes.push({user_id:u.id,groups:selected});
   }
   if(!changes.length) return showMsg('Изменений нет.');
+  button.dataset.saving='1';
   button.disabled=true;
   button.textContent='Сохранение…';
   try{
@@ -530,10 +552,7 @@ $('saveAllGroupsBtn').addEventListener('click',saveAllUserGroups);
 $('adminBody').addEventListener('change',e=>{
   if(!e.target.matches('input[data-group]'))return;
   const picker=e.target.closest('[data-group-picker]');
-  const count=picker.querySelectorAll('input[data-group]:checked').length;
-  picker.querySelector('.admin-group-count').textContent=count+' выбрано';
-  const status=picker.closest('tr').querySelector('.admin-save-status');
-  if(status)status.textContent='Изменено';
+  updateAdminGroupSaveState();
 });
 showPage('registry');
 if(client){
