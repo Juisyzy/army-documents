@@ -6,6 +6,12 @@
  const pageHeight=1123;
  let scheduled=0, pages=[], urls=[];
  const measureHost=document.createElement('div');measureHost.id='paginationMeasure';
+ // Layout measurements and PNG rendering use real A4-sized DOM nodes.
+ // Keep them outside the visible page, never below the login or registry.
+ Object.assign(measureHost.style,{
+  position:'absolute',left:'-100000px',top:'0',width:'794px',
+  pointerEvents:'none',zIndex:'-1'
+ });
  document.addEventListener('DOMContentLoaded',()=>document.body.appendChild(measureHost));
  function clonePage(){
   const node=source().cloneNode(true);node.removeAttribute('id');
