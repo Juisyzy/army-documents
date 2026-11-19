@@ -1,42 +1,48 @@
-/* Docks palette: slate #43506C, coral #EF4B4C, blue #3D619B, white #E9E9EB */
-:root{--bg:#27384f;--panel:#43506c;--panel2:#364963;--line:#64748d;--text:#e9e9eb;--muted:#d0d6e1;--accent:#3d619b;--accent2:#e9e9eb}
-body{background:#27384f;color:#e9e9eb}
-header{background:#293b55;border-color:#536783}
-.site-brand-copy .eyebrow{color:#cbd9f3}
-.panel,.order-viewer-panel,.publish-dialog-card{background:#43506c;border-color:#6a7b96;box-shadow:0 10px 26px #0c172a22}
-.panel-head,.order-viewer-head{background:#3a4b68;border-color:#63758f}
-.pill{background:#364963;border-color:#71829b;color:#e9e9eb}
-.muted,header p{color:#d0d6e1}
-button.primary,.site-nav button.active:not(#logoutBtn),.faction-btn.active,.site-nav #loginBtn:not(.hidden){background:#3d619b!important;color:#fff!important;border:1px solid #7397d1!important;box-shadow:0 4px 13px #16264a44!important}
-button.primary:not(:disabled):hover,.site-nav button.active:not(#logoutBtn):hover,.faction-btn.active:hover,.site-nav #loginBtn:not(.hidden):hover{background:#4d76b3!important;border-color:#a1b9e3!important;color:#fff!important}
-button.secondary,.site-nav button:not(#logoutBtn):not(.active):not(#loginBtn),.faction-btn:not(.active){background:#354964!important;color:#e9e9eb!important;border:1px solid #7688a3!important}
-button.secondary:hover,.site-nav button:not(#logoutBtn):not(.active):not(#loginBtn):hover,.faction-btn:not(.active):hover{background:#4b6181!important;border-color:#a1b2ce!important}
-.site-nav #logoutBtn,button.danger{background:#ef4b4c!important;color:white!important;border:1px solid #ff8081!important}
-.site-nav #logoutBtn:hover,button.danger:hover{background:#d83e44!important}
-button:focus-visible,a:focus-visible{outline-color:#b4cdf4!important}
-input:not([type=checkbox]):not([type=radio]):not([type=file]),textarea,select,.auth-box input,.auth-box select,.filter-row input,.filter-row select,.toolbar select,#orderSort{background:#2c3e58;color:#f6f7fa;border-color:#7688a3}
-input::placeholder,textarea::placeholder{color:#bdc9d8}
-input:focus,textarea:focus,select:focus{border-color:#a4c1f4;outline-color:#7fa7ea}
-input[type=checkbox],input[type=radio]{accent-color:#3d619b}
-.data-table th,.data-table td{border-bottom-color:#687992}
-.data-table a,.order-viewer-actions a{color:#d5e3ff}
-.site-message{color:#e9e9eb}
-.styled-select-trigger,.admin-group-picker summary{background:#354964!important;color:#f4f5f8!important;border-color:#8192ad!important}
-.styled-select-trigger:hover,.admin-group-picker summary:hover{background:#476080!important;border-color:#abc5ed!important}
-.styled-select-trigger:focus-visible,.styled-select.is-open .styled-select-trigger{border-color:#a4c1f4!important;box-shadow:0 0 0 3px #6396e244!important}
-.styled-select-chevron{border-color:#e9e9eb!important}
-.styled-select-menu,body>.styled-select-menu,.admin-group-options{background:#344966!important;border-color:#8192ad!important;color:#e9e9eb!important}
-.styled-select-option{color:#f1f3f7!important}
-.styled-select-option:hover,.styled-select-option:focus-visible,.admin-group-option:hover{background:#4d668a!important}
-.styled-select-option[aria-selected=true]{background:#3d619b!important;color:#fff!important}
-.admin-group-option input{accent-color:#3d619b}
-.admin-group-count{color:#d0d9e8}
-.order-viewer{background:#0f1827db}
-.order-viewer-image-wrap,.published-preview{background:#293b55}
-.site-toast{background:#354964;border-color:#8093ad}
-.site-toast.error{border-color:#ef4b4c}
-.site-toast.error .toast-symbol{background:#ef4b4c}
-.site-toast.success .toast-symbol{background:#3d619b}
-/* Printed A4 paper must retain its original appearance */
+/* Deep teal + lime theme | UI only; no changes to document rendering */
+:root{--bg:#102634;--panel:#152e40;--panel2:#1c3b50;--line:#3d5b6b;--text:#f2f8f7;--muted:#afc7ce;--accent:#ceff52;--accent2:#ceff52}
+html,body{background:#102634!important;color:var(--text)}
+header{background:#152e40!important;border-color:#355567!important}
+.eyebrow,.site-brand-copy .eyebrow{color:#ceff52!important}
+header p,.muted,.panel .muted{color:#afc7ce!important}
+.panel,.order-viewer-panel,.publish-dialog-card{background:#152e40!important;border-color:#456474!important;box-shadow:0 12px 35px #06182235}
+.panel-head,.order-viewer-head{background:#193649!important;border-color:#456474!important}
+.panel-body,.panel-head,.panel h2{color:#f2f8f7}
+.pill,.account-stat{background:#214255!important;border-color:#567181!important;color:#e4f2f0!important}
+.paper-wrap{background:#203a4a!important}
+button.primary,.site-nav button.active:not(#logoutBtn),.faction-btn.active,.site-nav #loginBtn:not(.hidden){background:#ceff52!important;color:#152e40!important;border:1px solid #ceff52!important;box-shadow:0 4px 14px #ceff5229!important}
+button.primary:not(:disabled):hover,.site-nav button.active:not(#logoutBtn):hover,.faction-btn.active:hover,.site-nav #loginBtn:not(.hidden):hover{background:#ddff89!important;color:#102634!important;border-color:#e6ffad!important}
+button.secondary,.site-nav button:not(#logoutBtn):not(.active):not(#loginBtn),.faction-btn:not(.active),.mobile-menu-toggle{background:#234459!important;color:#f2f8f7!important;border:1px solid #5b7b8d!important;box-shadow:none!important}
+button.secondary:not(:disabled):hover,.site-nav button:not(#logoutBtn):not(.active):not(#loginBtn):hover,.faction-btn:not(.active):hover{background:#2c5268!important;border-color:#8fb4c4!important}
+/* The exit button must stay red */
+#logoutBtn,.site-nav #logoutBtn{background:#d83f49!important;color:#fff!important;border:1px solid #f16d76!important;box-shadow:0 3px 12px #d83f4930!important}
+#logoutBtn:hover,.site-nav #logoutBtn:hover{background:#f0525c!important;color:#fff!important}
+button.danger,.danger{background:#d83f49!important;color:#fff!important;border-color:#f16d76!important}
+button.danger:hover{background:#f0525c!important}
+input:not([type=checkbox]):not([type=radio]):not([type=file]),textarea,select,.auth-box input,.auth-box select,.filter-row input,.filter-row select,.toolbar select,#orderSort{background:#102b3d!important;color:#f4faf8!important;border-color:#547586!important}
+input::placeholder,textarea::placeholder{color:#a6bdc5!important}
+input:focus,textarea:focus,select:focus{border-color:#ceff52!important;box-shadow:0 0 0 3px #ceff5226!important}
+input[type=checkbox],input[type=radio]{accent-color:#ceff52!important}
+.data-table th,.data-table td{border-bottom-color:#466576!important}
+.data-table th{color:#e5f3f0!important}
+.data-table a,.order-viewer-actions a,.registry-page-actions a{color:#ceff52!important}
+.site-message{color:#ceff52!important}
+.styled-select-trigger,.admin-group-picker summary{background:#214256!important;color:#f2f8f7!important;border-color:#668394!important}
+.styled-select-trigger:hover,.admin-group-picker summary:hover{background:#2b5266!important;border-color:#ceff52!important}
+.styled-select-trigger:focus-visible,.styled-select.is-open .styled-select-trigger{border-color:#ceff52!important;box-shadow:0 0 0 3px #ceff5226!important}
+.styled-select-chevron{border-color:#ceff52!important}
+.styled-select-menu,body>.styled-select-menu,.admin-group-options{background:#18374a!important;border-color:#628092!important;color:#f2f8f7!important}
+.styled-select-option{color:#f2f8f7!important}
+.styled-select-option:hover,.styled-select-option:focus-visible,.admin-group-option:hover{background:#31586b!important}
+.styled-select-option[aria-selected=true]{background:#3c6258!important;color:#ceff52!important}
+.admin-group-count{color:#bad1d7!important}
+.order-viewer{background:#061822e6!important}
+.order-viewer-image-wrap,.published-preview{background:#102b3d!important}
+.site-toast{background:#193a4c!important;border-color:#5d7d8f!important}
+.site-toast.error{border-color:#e85c65!important}
+.site-toast.error .toast-symbol{background:#d83f49!important}
+.site-toast.success .toast-symbol{background:#82b82d!important}
+button:focus-visible,a:focus-visible{outline:2px solid #ceff52!important;outline-offset:3px}
+/* Preserve all printed document layouts, white A4, seals and PNG output */
 .paper,.gk-document{background:#fff!important;color:#111!important}
+.paper .sig-placeholder{color:#888!important}
 @media(max-width:600px){.panel{border-radius:13px}}
