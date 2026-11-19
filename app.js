@@ -5,6 +5,7 @@ const cfg = window.APP_CONFIG || {};
 const configured = /^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(cfg.supabaseUrl || '') && !String(cfg.supabaseAnonKey).startsWith('PASTE_');
 const client = configured && window.supabase ? window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey) : null;
 let session = null, profile = null, registryFaction = 'army', orders = [], profiles = [];
+let registryAuthorNames = new Map();
 let activeDraftId = null, drafts = [];
 const staticEmail = id => `static-${id}@army-docymenti.netlify.app`;
 const validStatic = id => /^[0-9]{1,30}$/.test(id);
@@ -222,12 +223,26 @@ async function loadOrders(){
     return loadOrders();
   }
   orders=data||[];
+  // Resolve author IDs to character names; keep old author_name as fallback.
+  registryAuthorNames = new Map();
+  const authorIds=[...new Set(orders.map(o=>o.author_id).filter(Boolean))];
+  if(authorIds.length){
+    const {data:authors,error:authorsError}=await client.from('profiles')
+      .select('id,first_name,last_name').in('id',authorIds);
+    if(request!==registryRequest) return;
+    if(!authorsError){
+      for(const a of authors||[]){
+        const name=[a.first_name,a.last_name].filter(Boolean).join(' ').trim();
+        if(name) registryAuthorNames.set(a.id,name);
+      }
+    }
+  }
   renderOrders(); updateRegistryPagination();
 }
 function renderOrders(){
   $('registryBody').innerHTML=orders.map(o=>{
     const url=client.storage.from('order-images').getPublicUrl(o.image_path).data.publicUrl;
-    return `<tr><td>${o.number}</td><td>${safe(o.title)}</td><td>${safe(o.document_date)}</td><td>${safe(o.author_name)}</td><td><button type="button" class="secondary small-btn" data-view-order="${safe(o.id)}">Просмотр</button> · <a href="${safe(url)}" target="_blank" rel="noopener noreferrer">Открыть PNG</a> · <a href="${safe(url)}" download="prikaz-${o.number}.png" target="_blank" rel="noopener noreferrer">Скачать</a>${profile?.role==='admin'?` <button class="secondary small-btn danger" data-delete="${o.id}">Удалить</button>`:''}</td></tr>`;
+    return `<tr><td>${o.number}</td><td>${safe(o.title)}</td><td>${safe(o.document_date)}</td><td>${safe(registryAuthorNames.get(o.author_id) || o.author_name || 'Не указан')}</td><td><button type="button" class="secondary small-btn" data-view-order="${safe(o.id)}">Просмотр</button> · <a href="${safe(url)}" target="_blank" rel="noopener noreferrer">Открыть PNG</a> · <a href="${safe(url)}" download="prikaz-${o.number}.png" target="_blank" rel="noopener noreferrer">Скачать</a>${profile?.role==='admin'?` <button class="secondary small-btn danger" data-delete="${o.id}">Удалить</button>`:''}</td></tr>`;
   }).join('') || '<tr><td colspan="5">Приказы не найдены.</td></tr>';
 }
 
@@ -485,7 +500,7 @@ function viewOrder(id){
   if(!o) return showMsg('Приказ не найден. Обновите реестр.');
   const url=client.storage.from('order-images').getPublicUrl(o.image_path).data.publicUrl;
   $('orderViewerTitle').textContent=`Приказ № ${o.number} — ${o.title}`;
-  $('orderViewerMeta').textContent=`Дата: ${o.document_date} · Автор: ${o.author_name} · Подразделение: ${labelFaction(registryFaction)}`;
+  $('orderViewerMeta').textContent=`Дата: ${o.document_date} · Автор: ${registryAuthorNames.get(o.author_id) || o.author_name || 'Не указан'} · Подразделение: ${labelFaction(registryFaction)}`;
   $('orderViewerImage').src=url;
   $('orderViewerImage').alt=`Приказ № ${o.number}`;
   $('orderViewerOpen').href=url;
