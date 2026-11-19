@@ -90,3 +90,9 @@ body > .styled-select-menu.registration-faction-menu .styled-select-option {
   overflow-wrap:normal!important;
   word-break:normal!important;
 }
+
+/* Registration selector — explicit width independent of the other dropdowns */
+#registerForm .registration-faction-select {display:block!important;width:100%!important;min-width:100%!important;max-width:100%!important;box-sizing:border-box!important;}
+#registerForm .registration-faction-select .styled-select-trigger{display:flex!important;width:100%!important;min-width:100%!important;box-sizing:border-box!important;}
+#registerForm .registration-faction-select .styled-select-current{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+body>.registration-faction-menu .styled-select-option{overflow-wrap:normal!important;word-break:normal!important;white-space:normal!important;}
