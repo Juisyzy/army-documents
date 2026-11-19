@@ -164,6 +164,19 @@
   const original=document.getElementById('paperMobileScaler');if(!original)return;
   const host=document.createElement('div');host.id='a4Pages';original.after(host);original.style.display='none';
   const observe=new MutationObserver(refresh);observe.observe(source(),{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class','src','style']});
+  // First build can run while the editor is hidden (initial registry/login).
+  // Rebuild when navigating back to the editor, without requiring a faction switch.
+  const editor=document.getElementById('editorPage');
+  if(editor){
+   new MutationObserver(()=>{
+    if(!editor.classList.contains('hidden')){
+     refresh();
+     document.fonts.ready.then(()=>{
+      if(!editor.classList.contains('hidden'))refresh();
+     });
+    }
+   }).observe(editor,{attributes:true,attributeFilter:['class']});
+  }
   window.addEventListener('resize',scalePreviews);refresh();
  }
  document.addEventListener('DOMContentLoaded',init);
