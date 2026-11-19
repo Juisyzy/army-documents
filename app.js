@@ -261,13 +261,18 @@ async function publish(){
   let created=null;
   let stage='Подготовка PNG';
   try{
-    if(!window.htmlToImage) throw new Error('Библиотека экспорта PNG не загружена.');
-    // Сначала проверяем рендеринг, чтобы не занимать номер при ошибке изображения.
+    // #paper is deliberately hidden by pagination.js. Export the visible
+    // A4 page clones instead of passing the hidden source to html-to-image.
+    if(!window.A4Pages?.render) throw new Error('Модуль постраничного экспорта не загружен.');
     await document.fonts.ready;
+    let preparedPages;
     try {
-      const preview=await window.htmlToImage.toBlob($('paper'),{pixelRatio:2,backgroundColor:'#ffffff',cacheBust:false,filter:node=>!(node instanceof HTMLImageElement && !node.getAttribute('src'))});
-      if(!preview) throw new Error('Библиотека вернула пустой PNG');
-    } catch(e) { throw new Error('Не удалось сформировать PNG до резервирования: '+(e?.message || e?.type || String(e))); }
+      preparedPages=await window.A4Pages.render();
+      if(!preparedPages.length || preparedPages.some(b=>!(b instanceof Blob) || b.size===0))
+        throw new Error('Не удалось сформировать изображение страниц');
+      if(preparedPages.length>1)
+        throw new Error('Документ содержит '+preparedPages.length+' страницы. Текущая схема публикации сохраняет только одну страницу; публикация остановлена, чтобы не потерять остальные.');
+    } catch(e) { throw new Error('Не удалось сформировать PNG до резервирования: '+(e?.message || String(e))); }
     stage='Резервирование номера';
     const {data,error}=await client.rpc(faction==='gk'?'reserve_gk_order':faction==='fsvng'?'reserve_fsvng_order':'reserve_order',{p_faction:faction,p_title:title,p_document_date:date});
     if(error) throw error;
@@ -275,8 +280,10 @@ async function publish(){
     if(!created?.id || !created?.image_path || !Number.isInteger(created?.number)) throw new Error('Сервер вернул неполные данные резервирования приказа.');
     $('docNumber').value=String(created.number).padStart(3,'0');window.updateDocument();
     stage='Формирование PNG с номером';
-    const blob=await window.htmlToImage.toBlob($('paper'),{pixelRatio:2,backgroundColor:'#ffffff',cacheBust:false,filter:node=>!(node instanceof HTMLImageElement && !node.getAttribute('src'))});
-    if(!blob) throw new Error('Не удалось сформировать PNG.');
+    const numberedPages=await window.A4Pages.render();
+    if(numberedPages.length!==1 || !numberedPages[0]?.size)
+      throw new Error('Не удалось сформировать единственную страницу PNG после присвоения номера.');
+    const blob=numberedPages[0];
     stage='Загрузка PNG в Storage';
     const {error:uploadError}=await client.storage.from('order-images').upload(created.image_path,blob,{contentType:'image/png',upsert:false});
     if(uploadError) throw uploadError;
