@@ -31,3 +31,37 @@ body > .styled-select-menu{position:fixed!important;z-index:99999!important;box-
 /* Keep dropdown choices clickable above the registry content. */
 body > .styled-select-menu:not([hidden]){pointer-events:auto!important;}
 body > .styled-select-menu .styled-select-option{pointer-events:auto!important;}
+
+/* Registration: full-width faction selector, no narrow or vertical labels. */
+#registerForm .styled-select:has(> #authFaction){
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  flex:0 0 100%!important;
+  box-sizing:border-box;
+}
+#registerForm .styled-select:has(> #authFaction) .styled-select-trigger{
+  box-sizing:border-box;
+  width:100%!important;
+  min-width:0;
+}
+#registerForm .styled-select:has(> #authFaction) .styled-select-current{
+  min-width:0;
+  flex:1;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+body > .styled-select-menu.registration-faction-menu{
+  box-sizing:border-box;
+  min-width:0;
+  overflow-x:hidden;
+}
+body > .styled-select-menu.registration-faction-menu .styled-select-option{
+  white-space:normal;
+  overflow-wrap:normal;
+  word-break:normal;
+  hyphens:none;
+  line-height:1.35;
+}

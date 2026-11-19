@@ -11,6 +11,7 @@
     const title=document.createElement('span');title.className='styled-select-current';const chevron=document.createElement('span');chevron.className='styled-select-chevron';chevron.setAttribute('aria-hidden','true');trigger.append(title,chevron);
     const menu=document.createElement('div');menu.className='styled-select-menu';menu.setAttribute('role','listbox');menu.hidden=true;
     wrapper.append(trigger);document.body.append(menu);menus.set(wrapper,menu);
+    if(select.id==='authFaction'){wrapper.classList.add('registration-faction-select');menu.classList.add('registration-faction-menu');}
     if(select.id==='registryFaction'){wrapper.classList.add('registry-faction-select');for(const opt of select.options){if(opt.value==='commandant')opt.textContent='ВК';}}
     function positionMenu(){if(opened!==wrapper)return;const r=trigger.getBoundingClientRect();const spaceBelow=window.innerHeight-r.bottom;const above=spaceBelow<190&&r.top>spaceBelow;const available=Math.max(100,above?r.top-12:window.innerHeight-r.bottom-12);menu.style.position='fixed';menu.style.left=Math.max(8,r.left)+'px';menu.style.width=Math.min(Math.max(r.width,select.id==='registryFaction'?220:0),window.innerWidth-16)+'px';menu.style.right='auto';menu.style.maxHeight=Math.min(250,available)+'px';menu.style.top=above?'auto':Math.min(window.innerHeight-20,r.bottom+6)+'px';menu.style.bottom=above?(window.innerHeight-r.top+6)+'px':'auto';menu.style.zIndex='99999';menu.style.visibility='visible';}
 

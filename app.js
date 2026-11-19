@@ -227,7 +227,7 @@ async function loadOrders(){
 function renderOrders(){
   $('registryBody').innerHTML=orders.map(o=>{
     const url=client.storage.from('order-images').getPublicUrl(o.image_path).data.publicUrl;
-    return `<tr><td>${o.number}</td><td>${safe(o.title)}</td><td>${safe(o.document_date)}</td><td>${safe(o.author_name)}</td><td><button type="button" class="secondary small-btn" data-view-order="${safe(o.id)}">Просмотр</button>${profile?.role==='admin'?` <button class="secondary small-btn danger" data-delete="${o.id}">Удалить</button>`:''}</td></tr>`;
+    return `<tr><td>${o.number}</td><td>${safe(o.title)}</td><td>${safe(o.document_date)}</td><td>${safe(o.author_name)}</td><td><button type="button" class="secondary small-btn" data-view-order="${safe(o.id)}">Просмотр</button> · <a href="${safe(url)}" target="_blank" rel="noopener noreferrer">Открыть PNG</a> · <a href="${safe(url)}" download="prikaz-${o.number}.png" target="_blank" rel="noopener noreferrer">Скачать</a>${profile?.role==='admin'?` <button class="secondary small-btn danger" data-delete="${o.id}">Удалить</button>`:''}</td></tr>`;
   }).join('') || '<tr><td colspan="5">Приказы не найдены.</td></tr>';
 }
 
@@ -247,10 +247,12 @@ async function publish(){
   let stage='Подготовка PNG';
   try{
     if(!window.htmlToImage) throw new Error('Библиотека экспорта PNG не загружена.');
-    // Проверяем все листы до резервирования номера.
+    // Сначала проверяем рендеринг, чтобы не занимать номер при ошибке изображения.
     await document.fonts.ready;
-    let blobs=await window.A4Pages.render();
-    if(!blobs.length) throw new Error('Не удалось подготовить страницы А4.');
+    try {
+      const preview=await window.htmlToImage.toBlob($('paper'),{pixelRatio:2,backgroundColor:'#ffffff',cacheBust:false,filter:node=>!(node instanceof HTMLImageElement && !node.getAttribute('src'))});
+      if(!preview) throw new Error('Библиотека вернула пустой PNG');
+    } catch(e) { throw new Error('Не удалось сформировать PNG до резервирования: '+(e?.message || e?.type || String(e))); }
     stage='Резервирование номера';
     const {data,error}=await client.rpc(faction==='gk'?'reserve_gk_order':faction==='fsvng'?'reserve_fsvng_order':'reserve_order',{p_faction:faction,p_title:title,p_document_date:date});
     if(error) throw error;
@@ -258,37 +260,11 @@ async function publish(){
     if(!created?.id || !created?.image_path || !Number.isInteger(created?.number)) throw new Error('Сервер вернул неполные данные резервирования приказа.');
     $('docNumber').value=String(created.number).padStart(3,'0');window.updateDocument();
     stage='Формирование PNG с номером';
-    blobs=await window.A4Pages.render();
+    const blob=await window.htmlToImage.toBlob($('paper'),{pixelRatio:2,backgroundColor:'#ffffff',cacheBust:false,filter:node=>!(node instanceof HTMLImageElement && !node.getAttribute('src'))});
+    if(!blob) throw new Error('Не удалось сформировать PNG.');
     stage='Загрузка PNG в Storage';
-    const paths=[];
-    for(let i=0;i<blobs.length;i++){
-      const path=i===0?created.image_path:created.image_path.replace(/\.png$/i,'')+`-page-${i+1}.png`;
-      // Retry transient network resets; keep the same object key to avoid duplicates.
-      let uploadError=null;
-      for(let attempt=1;attempt<=3;attempt++){
-        const result=await client.storage.from('order-images').upload(path,blobs[i],{contentType:'image/png',upsert:false});
-        uploadError=result.error;
-        if(!uploadError) break;
-        // A network reset can occur after Storage accepted the upload. Verify before retrying.
-        const networkFailure=/failed to fetch|network|connection|timeout/i.test(errorText(uploadError));
-        if(!networkFailure) throw uploadError;
-        console.warn(`Storage upload attempt ${attempt}/3 failed for page ${i+1}`,uploadError);
-        const folder=path.slice(0,path.lastIndexOf('/'));
-        const filename=path.slice(path.lastIndexOf('/')+1);
-        try{
-          const {data:files,error:listError}=await client.storage.from('order-images').list(folder,{search:filename,limit:100});
-          if(!listError && files?.some(file=>file.name===filename)){uploadError=null;break;}
-        }catch(checkError){console.warn('Storage verification failed',checkError);}
-        if(attempt<3) await new Promise(resolve=>setTimeout(resolve,attempt*1500));
-      }
-      if(uploadError) throw new Error(`Не удалось загрузить страницу ${i+1} (${Math.round(blobs[i].size/1024)} КБ) после 3 попыток: ${errorText(uploadError)}`);
-      if(i>0) paths.push({order_id:created.id,page_number:i+1,image_path:path});
-    }
-    if(paths.length){
-      stage='Сохранение списка страниц';
-      const {error:pageError}=await client.from('order_pages').insert(paths);
-      if(pageError) throw pageError;
-    }
+    const {error:uploadError}=await client.storage.from('order-images').upload(created.image_path,blob,{contentType:'image/png',upsert:false});
+    if(uploadError) throw uploadError;
     stage='Завершение публикации';
     const {error:finalError}=await client.rpc('publish_order',{p_order_id:created.id});
     if(finalError) throw finalError;
@@ -300,7 +276,7 @@ async function publish(){
     showMsg(`Приказ № ${created.number} опубликован в реестре «${labelFaction(faction)}».`);
     registryFaction=faction; $('registryFaction').value=faction;
     closePublishDialog();
-    showPublishedDialog(created, title, blobs);
+    showPublishedDialog(created, title, blob);
   }catch(err){console.error('Ошибка публикации на этапе '+stage,err);showMsg('Ошибка публикации ('+stage+'): '+(err instanceof Event ? 'Сбой загрузки ресурса изображения (проверьте герб или подпись)' : errorText(err))+(created?' Номер был зарезервирован; неопубликованная запись не отображается в реестре.':''));}
   finally{button.disabled=false;updateAuthUI();}
 }
@@ -310,23 +286,26 @@ function closePublishDialog(){
   $('publishDialog').classList.add('hidden');
   document.body.classList.remove('publish-dialog-open');
 }
-let publishedPngUrls=[];
-function showPublishedDialog(order,title,blobs){
-  publishedPngUrls.forEach(url=>URL.revokeObjectURL(url));
-  publishedPngUrls=blobs.map(blob=>URL.createObjectURL(blob));
-  $('publishedDialogText').textContent=`Приказ № ${order.number} «${title}» внесён в реестр. Страниц: ${blobs.length}.`;
-  $('publishedReadyMessage').textContent='Чтобы скачать PNG, нажмите на кнопку нужной страницы ниже.';
-  $('publishedPreviewImage').src=publishedPngUrls[0];
-  $('publishedPageLinks').innerHTML=publishedPngUrls.map((url,i)=>`<a href="${url}" download="prikaz-${order.number}-page-${i+1}.png">Страница ${i+1}</a>`).join('');
+let publishedPngUrl = null;
+function showPublishedDialog(order, title, blob){
+  if(publishedPngUrl) URL.revokeObjectURL(publishedPngUrl);
+  // Используем именно тот PNG, который был успешно загружен в реестр.
+  publishedPngUrl=URL.createObjectURL(blob);
+  $('publishedDialogText').textContent=`Приказ № ${order.number} «${title}» внесён в реестр.`;
+  $('publishedReadyMessage').textContent='PNG готов к скачиванию';
+  $('publishedPreviewImage').src=publishedPngUrl;
+  $('publishedDownloadBtn').href=publishedPngUrl;
+  $('publishedDownloadBtn').download=`prikaz-${order.number}.png`;
   $('publishedDialog').classList.remove('hidden');
   document.body.classList.add('publish-dialog-open');
+  $('publishedDownloadBtn').focus();
 }
 function closePublishedDialog(){
   $('publishedDialog').classList.add('hidden');
   document.body.classList.remove('publish-dialog-open');
   $('publishedPreviewImage').removeAttribute('src');
-  $('publishedPageLinks').replaceChildren();
-  publishedPngUrls.forEach(url=>URL.revokeObjectURL(url));publishedPngUrls=[];
+  $('publishedDownloadBtn').removeAttribute('href');
+  if(publishedPngUrl){ URL.revokeObjectURL(publishedPngUrl); publishedPngUrl=null; }
 }
 $('nextPublishBtn').addEventListener('click',()=>{
   if(!session || !profile || !client) return showMsg('Для публикации войдите в аккаунт.');
@@ -356,7 +335,12 @@ async function loadAdmin(){
   if(profile?.role!=='admin'){ $('adminBody').innerHTML='<tr><td colspan="4">Доступ запрещён.</td></tr>';return; }
   const [p,h]=await Promise.all([client.from('profiles').select('id,username,first_name,last_name,character_static,faction,additional_faction,gk_access,requested_gk,fsvng_access,role').order('created_at',{ascending:false}).limit(200),client.from('order_history').select('created_at,action,actor_name,order_number,faction').order('created_at',{ascending:false}).limit(100)]);
   if(p.error) showMsg(errorText(p.error)); else profiles=p.data||[];
-  $('adminBody').innerHTML=profiles.map(u=>`<tr><td><strong>${safe([u.first_name,u.last_name].filter(Boolean).join(' ') || 'Имя и фамилия не указаны')}</strong>${u.character_static ? `<div style="margin-top:5px;opacity:.7;font-size:12px">Статик: ${safe(u.character_static)}</div>` : ''}</td><td><select data-faction-user="${u.id}"><option value="army" ${u.faction==='army'&&!u.additional_faction?'selected':''}>Только Армия</option><option value="commandant" ${u.faction==='commandant'&&!u.additional_faction?'selected':''}>Только Военкомат</option><option value="both" ${u.additional_faction?'selected':''}>Армия + Военкомат</option></select><label style="display:block;margin-top:8px"><input type="checkbox" data-gk-user="${u.id}" ${u.gk_access?'checked':''}> Доступ к ГК РО${u.requested_gk&&!u.gk_access?' (заявка на доступ)':''}</label><label style="display:block;margin-top:8px"><input type="checkbox" data-fsvng-user="${u.id}" ${u.fsvng_access?'checked':''}> Доступ к ФСВНГ</label></td><td>${u.role==='admin'?'Администратор':'Пользователь'}</td><td><button class="secondary small-btn" data-save-user="${u.id}">Сохранить подразделение</button></td></tr>`).join('');
+  $('adminBody').innerHTML=profiles.map(u=>{
+    const access=new Set([u.faction,u.additional_faction,u.gk_access?'gk':null,u.fsvng_access?'fsvng':null].filter(Boolean));
+    const choices=[['army','ВС РО'],['commandant','ВК'],['gk','ГК РО'],['fsvng','ФСВНГ']];
+    const checks=choices.map(([key,name])=>`<label class="admin-group-option"><input type="checkbox" data-group="${key}" ${access.has(key)?'checked':''}><span>${name}</span></label>`).join('');
+    return `<tr><td><strong>${safe([u.first_name,u.last_name].filter(Boolean).join(' ') || 'Имя и фамилия не указаны')}</strong>${u.character_static?`<div style="margin-top:5px;opacity:.7;font-size:12px">Статик: ${safe(u.character_static)}</div>`:''}</td><td><details class="admin-group-picker" data-group-picker="${u.id}"><summary>Подразделения <span class="admin-group-count">${access.size} выбрано</span></summary><div class="admin-group-options">${checks}</div></details></td><td>${u.role==='admin'?'Администратор':'Пользователь'}</td><td><button class="secondary small-btn" data-save-user="${u.id}">Сохранить группы</button></td></tr>`;
+  }).join('');
   await loadResetRequests();
   $('historyBody').innerHTML=h.error?`<tr><td colspan="4">${safe(errorText(h.error))}</td></tr>`:(h.data||[]).map(e=>`<tr><td>${safe(new Date(e.created_at).toLocaleString('ru-RU'))}</td><td>${safe(e.actor_name)}</td><td>${safe(e.action)}</td><td>${safe(labelFaction(e.faction))} №${safe(e.order_number)}</td></tr>`).join('')||'<tr><td colspan="4">Нет событий.</td></tr>';
 }
@@ -400,15 +384,20 @@ async function generateResetCode(id){
   }catch(e){showMsg(errorText(e));}
 }
 async function saveUser(id){
-  const choice=document.querySelector(`[data-faction-user="${id}"]`).value;
   const current=profiles.find(u=>u.id===id);
-  if (!current) return showMsg('Пользователь не найден.');
-  const faction=choice==='both' ? (current.faction==='gk'?'army':current.faction) : choice;
-  const additional_faction=choice==='both' ? (faction==='army'?'commandant':'army') : null;
-  const gk_access=!!document.querySelector(`[data-gk-user="${id}"]`)?.checked;
-  const fsvng_access=!!document.querySelector(`[data-fsvng-user="${id}"]`)?.checked;
+  const picker=document.querySelector(`[data-group-picker="${id}"]`);
+  if(!current || !picker) return showMsg('Пользователь не найден.');
+  const selected=[...picker.querySelectorAll('input[data-group]:checked')].map(el=>el.dataset.group);
+  if(!selected.length) return showMsg('Выберите хотя бы одно подразделение.');
+  // The existing database stores army/VK in faction + additional_faction,
+  // and GK/FSVNG in dedicated access flags.
+  const standard=selected.filter(x=>x==='army'||x==='commandant');
+  let faction=standard.includes(current.faction)?current.faction:(standard[0]||selected[0]);
+  const additional_faction=standard.find(x=>x!==faction)||null;
+  const gk_access=selected.includes('gk');
+  const fsvng_access=selected.includes('fsvng');
   const {error}=await client.from('profiles').update({faction,additional_faction,gk_access,fsvng_access}).eq('id',id);
-  if(error) showMsg(errorText(error)); else {showMsg('Подразделение обновлено.');loadAdmin();}
+  if(error) showMsg(errorText(error)); else {showMsg('Доступ к подразделениям обновлён.');loadAdmin();}
 }
 
 function setActiveDraft(id){
@@ -491,29 +480,22 @@ $('clearFilters').addEventListener('click',()=>{
 $('registryPrev').addEventListener('click',()=>{if(registryPage>0){registryPage--;loadOrders();}});
 $('registryNext').addEventListener('click',()=>{if((registryPage+1)*REGISTRY_PAGE_SIZE<registryTotal){registryPage++;loadOrders();}});
 $('registryBody').addEventListener('click',e=>{const view=e.target.closest('[data-view-order]');if(view){viewOrder(view.dataset.viewOrder);return;}const id=e.target.dataset.delete;if(id)deleteOrder(id);});
-async function viewOrder(id){
+function viewOrder(id){
   const o=orders.find(item=>String(item.id)===String(id));
-  if(!o)return showMsg('Приказ не найден. Обновите реестр.');
-  const {data:additional,error}=await client.from('order_pages').select('page_number,image_path').eq('order_id',o.id).order('page_number');
-  if(error){showMsg('Не удалось загрузить страницы: '+errorText(error));return;}
-  const paths=[o.image_path,...(additional||[]).map(p=>p.image_path)];
-  const urls=paths.map(path=>client.storage.from('order-images').getPublicUrl(path).data.publicUrl);
+  if(!o) return showMsg('Приказ не найден. Обновите реестр.');
+  const url=client.storage.from('order-images').getPublicUrl(o.image_path).data.publicUrl;
   $('orderViewerTitle').textContent=`Приказ № ${o.number} — ${o.title}`;
-  $('orderViewerMeta').textContent=`Дата: ${o.document_date} · Автор: ${o.author_name} · Подразделение: ${labelFaction(registryFaction)} · Страниц: ${urls.length}`;
-  $('orderViewerImage').src=urls[0];
-  $('orderViewerImage').alt=`Приказ № ${o.number}, страница 1`;
-  $('orderViewerOpen').href=urls[0];
-  $('orderViewerDownload').href=urls[0];
-  $('orderViewerDownload').download=`prikaz-${o.number}-page-1.png`;
-  $('orderViewerPageLinks').innerHTML=urls.map((url,i)=>`<a href="${safe(url)}" target="_blank" rel="noopener noreferrer" download="prikaz-${o.number}-page-${i+1}.png" data-view-page="${i}">Страница ${i+1} · PNG</a>`).join('');
-  $('orderViewerPageLinks').querySelectorAll('[data-view-page]').forEach(link=>link.addEventListener('click',()=>{
-    const i=Number(link.dataset.viewPage);$('orderViewerImage').src=urls[i];$('orderViewerOpen').href=urls[i];$('orderViewerDownload').href=urls[i];$('orderViewerDownload').download=`prikaz-${o.number}-page-${i+1}.png`;
-  }));
+  $('orderViewerMeta').textContent=`Дата: ${o.document_date} · Автор: ${o.author_name} · Подразделение: ${labelFaction(registryFaction)}`;
+  $('orderViewerImage').src=url;
+  $('orderViewerImage').alt=`Приказ № ${o.number}`;
+  $('orderViewerOpen').href=url;
+  $('orderViewerDownload').href=url;
+  $('orderViewerDownload').download=`prikaz-${o.number}.png`;
   $('orderViewer').classList.remove('hidden');
   document.body.classList.add('viewer-open');
   $('orderViewerClose').focus();
 }
-function closeOrderViewer(){ $('orderViewer').classList.add('hidden');$('orderViewerImage').removeAttribute('src');$('orderViewerPageLinks').replaceChildren();document.body.classList.remove('viewer-open'); }
+function closeOrderViewer(){ $('orderViewer').classList.add('hidden');$('orderViewerImage').removeAttribute('src');document.body.classList.remove('viewer-open'); }
 $('orderViewerClose').addEventListener('click',closeOrderViewer);
 $('orderViewer').addEventListener('click',e=>{if(e.target===$('orderViewer'))closeOrderViewer();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('orderViewer').classList.contains('hidden'))closeOrderViewer();});
